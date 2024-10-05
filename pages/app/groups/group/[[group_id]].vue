@@ -25,7 +25,7 @@
           >You are owed <span class="text-2xl text-lime-500">$3500</span></span
         >
         <div>
-          <span class="flex items-center gap-2 text-sm"
+          <span class="flex items-center gap-1 text-sm"
             >- Tanay owes you
             <span class="text-md text-lime-500">$3500</span></span
           >
@@ -34,42 +34,46 @@
     >
     <div class="w-full flex text-center gap-2">
       <div class="flex-grow">
-        <UButton block>Add Expense</UButton>
+        <UButton @click="showExpenseEditor = true" block>Add Expense</UButton>
       </div>
       <div class="flex-grow">
-        <UButton block variant="outline">Record Payment</UButton>
+        <UButton @click="showPaymentEditor = true" block variant="outline"
+          >Record Payment</UButton
+        >
       </div>
     </div>
     <div class="space-y-1">
       <span class="text-lg">October 2024</span>
-      <div
-        v-for="_ in [1, 2]"
-        class="px-3 py-2 flex gap-3 bg-gray-100 dark:bg-gray-800"
-      >
-        <!-- <div class="flex flex-col items-center font-light">
-          <span class="text-xs">Oct</span>
-          <span class="text-sm">05</span>
-        </div> -->
-        <div class="flex-grow flex justify-between items-center">
-          <div class="flex flex-col">
-            <div class="gap-1 flex items-center pb-1">
-              <span>Rent</span>
-              <span class="text-sm text-primary-600/80 dark:text-primary-300/80"
-                >&middot; Oct 05</span
-              >
-            </div>
-            <span class="text-sm font-light">You paid $300</span>
-            <span class="text-sm font-light">Tanay paid $40</span>
-          </div>
-          <span class="text-xl text-lime-500">$340</span>
-        </div>
-      </div>
+      <ExpenseItem :expense="expense" v-for="expense in expenses" />
     </div>
   </div>
+  <UModal v-model="showPaymentEditor">
+    <PaymentEditor @close="showPaymentEditor = false" />
+  </UModal>
+  <UModal v-model="showExpenseEditor">
+    <ExpenseEditor @add="add" @close="showExpenseEditor = false" />
+  </UModal>
 </template>
 
 <script setup>
+const showExpenseEditor = ref(false),
+  showPaymentEditor = ref(false),
+  expenses = ref([
+    // {
+    //   description: "Rent",
+    //   payers: { John: 40 },
+    //   splitters: { John: 40 },
+    //   created_at: new Date(),
+    //   splitType: "Split Equally",
+    // },
+  ]);
+// const expensesByMon
 const groupID = useRoute().params.group_id;
 // TODO: handle loading states
 const { getGroupByID, loading } = storeToRefs(useGroups());
+
+function add(expense) {
+  expenses.value.push(expense);
+  showExpenseEditor.value = false;
+}
 </script>

@@ -211,7 +211,7 @@ export const getGroups = async (): Promise<
       groups[group.id] = {
         id: group.id,
         name: name || "Unnamed Group",
-        balance: 200,
+        balance: -200,
       };
     }),
   );

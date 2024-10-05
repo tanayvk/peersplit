@@ -1,3 +1,13 @@
 html {
   @apply font-sans;
 }
+
+.color-positive {
+  @apply text-lime-500 dark:text-lime-400;
+}
+.color-negative {
+  @apply text-rose-500 dark:text-rose-400;
+}
+.color-neutral {
+  @apply text-gray-500 dark:text-gray-400;
+}

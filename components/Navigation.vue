@@ -24,15 +24,18 @@ const items = [
     label: "Groups",
     icon: "i-heroicons-users",
   },
+  // {
+  //   disabled: true,
+  //   label: "Payments",
+  //   icon: "i-heroicons-currency-dollar",
+  // },
   {
-    label: "Payments",
-    icon: "i-heroicons-currency-dollar",
-  },
-  {
+    disabled: true,
     label: "Activity",
     icon: "i-heroicons-clipboard-document-list",
   },
   {
+    disabled: true,
     label: "Sync",
     icon: "i-heroicons-arrow-path",
   },
