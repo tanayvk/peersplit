@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   // devtools: { enabled: true },
-  modules: ["@nuxt/ui", "@nuxt/fonts", "nuxt-gtag"],
+  modules: ["@nuxt/ui", "@nuxt/fonts", "nuxt-gtag", "@pinia/nuxt"],
   fonts: {
     families: [{ name: "Fredoka", provider: "google" }],
   },

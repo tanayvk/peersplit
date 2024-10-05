@@ -12,9 +12,19 @@
   "dependencies": {
     "@nuxt/fonts": "^0.9.2",
     "@nuxt/ui": "^2.18.6",
+    "@pinia/nuxt": "^0.5.5",
+    "@vlcn.io/crsqlite-wasm": "^0.16.0",
+    "nanoid": "^5.0.7",
     "nuxt": "^3.13.0",
     "nuxt-gtag": "^3.0.1",
+    "pinia": "^2.2.4",
     "vue": "latest",
     "vue-router": "latest"
+  },
+  "devDependencies": {
+    "eslint": "^9.11.1",
+    "eslint-plugin-vue": "^9.28.0",
+    "globals": "^15.10.0",
+    "typescript-eslint": "^8.8.0"
   }
 }
