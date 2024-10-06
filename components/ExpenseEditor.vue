@@ -53,7 +53,7 @@
           :loading="adding"
           variant="outline"
           :disabled="
-            Object.keys(expense.splitters) === 0 ||
+            Object.keys(expense.splitters).length === 0 ||
             paid === 0 ||
             !expense.description ||
             remaining !== 0
