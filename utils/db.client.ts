@@ -201,17 +201,19 @@ export const createGroup = async (name: string) => {
 export const getGroups = async (): Promise<
   Record<string, { id: string; name: string }>
 > => {
-  const groupsIds = await db.execO("SELECT id FROM groups");
+  const groupsIDs = await db.execO("SELECT id FROM groups");
   const groups: Record<string, any> = {};
   await Promise.all(
-    groupsIds.map(async (group: { id: string }) => {
+    groupsIDs.map(async (group: { id: string }) => {
       const [{ value: name } = { value: "" }] = await groupDBs[group.id].execO(
         "SELECT value FROM kv WHERE id = 'name'",
       );
       groups[group.id] = {
         id: group.id,
+        myID: "Tanay",
         name: name || "Unnamed Group",
-        balance: -200,
+        transactions: {},
+        transactionOrder: [],
       };
     }),
   );

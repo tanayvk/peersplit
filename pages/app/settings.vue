@@ -9,7 +9,16 @@
       </UFormGroup>
     </div>
     <div class="text-center w-full py-4">
-      <UButton to="/" variant="link" class="px-0">PeerSplit</UButton>
+      <div class="flex gap-1 justify-center items-center">
+        <UButton to="/" variant="link" class="p-0">PeerSplit</UButton>
+        <span class="text-primary"> | </span>
+        <UButton
+          to="https://github.com/tanayvk/peersplit"
+          variant="link"
+          class="p-0"
+          >GitHub</UButton
+        >
+      </div>
       <div class="dark:text-gray-400 space-x-1">
         <span>Made with</span
         ><UIcon class="text-rose-600" name="i-heroicons-heart-solid" /><span

@@ -1,5 +1,6 @@
 <template>
-  <div class="flex flex-col gap-2 h-full px-2">
+  <SpinLoader height="h-full" v-if="loading" />
+  <div v-if="!loading" class="flex flex-col gap-2 h-full px-2">
     <div class="h-12 flex justify-between items-center gap-2">
       <UButton
         to="/app/groups"
@@ -11,7 +12,12 @@
       <span class="text-center font-medium text-lg">{{
         getGroupByID(groupID)?.name
       }}</span>
-      <UButton icon="i-heroicons-user-plus" variant="ghost" color="gray" />
+      <UButton
+        @click="showGroupShare = true"
+        icon="i-heroicons-user-plus"
+        variant="ghost"
+        color="gray"
+      />
       <!-- <UButton
         disabled
         icon="i-heroicons-cog-6-tooth"
@@ -19,19 +25,7 @@
         color="gray"
       /> -->
     </div>
-    <UCard
-      ><div class="flex flex-col gap-1">
-        <span class="flex items-center gap-2"
-          >You are owed <span class="text-2xl text-lime-500">$3500</span></span
-        >
-        <div>
-          <span class="flex items-center gap-1 text-sm"
-            >- Tanay owes you
-            <span class="text-md text-lime-500">$3500</span></span
-          >
-        </div>
-      </div></UCard
-    >
+    <YourBalances :groupID="groupID" />
     <div class="w-full flex text-center gap-2">
       <div class="flex-grow">
         <UButton @click="showExpenseEditor = true" block>Add Expense</UButton>
@@ -43,37 +37,41 @@
       </div>
     </div>
     <div class="space-y-1">
-      <span class="text-lg">October 2024</span>
-      <ExpenseItem :expense="expense" v-for="expense in expenses" />
+      <ExpenseGroup
+        :group="group"
+        v-for="group in getGroupedTransactionsByGroupID(groupID)"
+      />
     </div>
   </div>
   <UModal v-model="showPaymentEditor">
-    <PaymentEditor @close="showPaymentEditor = false" />
+    <PaymentEditor
+      @record="add"
+      v-model="ugly"
+      @close="showPaymentEditor = false"
+    />
   </UModal>
   <UModal v-model="showExpenseEditor">
     <ExpenseEditor @add="add" @close="showExpenseEditor = false" />
+  </UModal>
+  <UModal v-model="showGroupShare">
+    <GroupShare @close="showGroupShare = false" />
   </UModal>
 </template>
 
 <script setup>
 const showExpenseEditor = ref(false),
   showPaymentEditor = ref(false),
-  expenses = ref([
-    // {
-    //   description: "Rent",
-    //   payers: { John: 40 },
-    //   splitters: { John: 40 },
-    //   created_at: new Date(),
-    //   splitType: "Split Equally",
-    // },
-  ]);
-// const expensesByMon
+  showGroupShare = ref(false),
+  ugly = ref({ hello: "" });
 const groupID = useRoute().params.group_id;
 // TODO: handle loading states
-const { getGroupByID, loading } = storeToRefs(useGroups());
+const { getGroupByID, loading, getGroupedTransactionsByGroupID } = storeToRefs(
+  useGroups(),
+);
 
 function add(expense) {
-  expenses.value.push(expense);
   showExpenseEditor.value = false;
+  showPaymentEditor.value = false;
+  useGroups().addTransaction(groupID, expense);
 }
 </script>

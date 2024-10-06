@@ -66,19 +66,18 @@
 </template>
 
 <script setup>
+import { nanoid } from "nanoid";
+
+const groupID = useRoute().params.group_id;
 const expense = ref({
+  id: nanoid(),
+  type: "expense",
   description: "",
   splitType: 1,
   payers: {},
   splitters: {},
   created_at: new Date(),
 });
-const splitTypes = [
-  "Split Equally",
-  "Split by Amount",
-  "Split by Percentages",
-  "Split by Shares",
-].map((x, i) => ({ id: i + 1, name: x }));
 const paid = computed(() =>
   Object.values(expense.value.payers).reduce(
     (a, b) => Number(a) + Number(b),
@@ -94,7 +93,6 @@ const split = computed(() =>
 const remaining = computed(() => {
   if (expense.value.splitType === 4 || expense.value.splitType === 1) return 0; // shares or split equally
   const total = expense.value.splitType === 2 ? paid.value : 100;
-  console.log("total", total);
   return total - split.value;
 });
 const adding = ref(false);
