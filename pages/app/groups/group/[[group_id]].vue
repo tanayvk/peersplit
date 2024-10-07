@@ -12,18 +12,20 @@
       <span class="text-center font-medium text-lg">{{
         getGroupByID(groupID)?.name
       }}</span>
-      <UButton
-        @click="showGroupShare = true"
-        icon="i-heroicons-user-plus"
-        variant="ghost"
-        color="gray"
-      />
-      <!-- <UButton
-        disabled
-        icon="i-heroicons-cog-6-tooth"
-        variant="ghost"
-        color="gray"
-      /> -->
+      <div>
+        <UButton
+          disabled
+          icon="i-heroicons-chart-bar"
+          variant="ghost"
+          color="gray"
+        />
+        <UButton
+          @click="showGroupShare = true"
+          icon="i-heroicons-user-plus"
+          variant="ghost"
+          color="gray"
+        />
+      </div>
     </div>
     <YourBalances :groupID="groupID" />
     <div class="w-full flex text-center gap-2">
@@ -38,23 +40,57 @@
     </div>
     <div class="space-y-1">
       <ExpenseGroup
+        @edit="edit"
         :group="group"
         v-for="group in getGroupedTransactionsByGroupID(groupID)"
       />
     </div>
   </div>
-  <UModal v-model="showPaymentEditor">
+  <UModal prevent-close v-model="showPaymentEditor">
     <PaymentEditor
-      @record="add"
       v-model="ugly"
-      @close="showPaymentEditor = false"
+      :expenseItem="expense"
+      @update="update"
+      @record="add"
+      @close="clearEditors"
+      @delete="requestDel"
     />
   </UModal>
-  <UModal v-model="showExpenseEditor">
-    <ExpenseEditor @add="add" @close="showExpenseEditor = false" />
+  <UModal prevent-close v-model="showExpenseEditor">
+    <ExpenseEditor
+      :expenseItem="expense"
+      @update="update"
+      @add="add"
+      @close="clearEditors"
+      @delete="requestDel"
+    />
   </UModal>
   <UModal v-model="showGroupShare">
     <GroupShare @close="showGroupShare = false" />
+  </UModal>
+  <UModal v-model="showDeleteConfirmation">
+    <UCard>
+      <template #header>
+        <div class="flex justify-between items-center">
+          <span class="font-medium">Delete Expense</span>
+          <UButton
+            @click="showDeleteConfirmation = false"
+            variant="ghost"
+            color="gray"
+            icon="i-heroicons-x-mark"
+          />
+        </div>
+      </template>
+      <div class="space-y-2">Are you sure you want to delete this expense?</div>
+      <template #footer>
+        <div class="flex gap-2">
+          <UButton @click="del" color="rose" variant="outline"
+            >Yes, delete</UButton
+          >
+          <UButton @click="cancelDel" variant="ghost">Cancel</UButton>
+        </div>
+      </template>
+    </UCard>
   </UModal>
 </template>
 
@@ -62,16 +98,48 @@
 const showExpenseEditor = ref(false),
   showPaymentEditor = ref(false),
   showGroupShare = ref(false),
-  ugly = ref({ hello: "" });
+  showDeleteConfirmation = ref(false),
+  ugly = ref({ hello: "" }),
+  expense = ref(null),
+  deleteExpense = ref(null);
 const groupID = useRoute().params.group_id;
 // TODO: handle loading states
 const { getGroupByID, loading, getGroupedTransactionsByGroupID } = storeToRefs(
   useGroups(),
 );
-
 function add(expense) {
+  useGroups().addTransaction(groupID, expense);
+  clearEditors();
+}
+function update(expense) {
+  useGroups().updateTransaction(groupID, expense);
+  clearEditors();
+}
+function edit(exp) {
+  expense.value = exp;
+  if (exp.type === "expense") {
+    showExpenseEditor.value = true;
+  } else {
+    showPaymentEditor.value = true;
+  }
+}
+function clearEditors() {
   showExpenseEditor.value = false;
   showPaymentEditor.value = false;
-  useGroups().addTransaction(groupID, expense);
+  expense.value = null;
+  ugly.value = { hello: "" };
+}
+function requestDel(expense) {
+  deleteExpense.value = expense;
+  showDeleteConfirmation.value = true;
+}
+function del() {
+  useGroups().deleteTransaction(groupID, deleteExpense.value.id);
+  showDeleteConfirmation.value = false;
+  clearEditors();
+}
+function cancelDel() {
+  showDeleteConfirmation.value = false;
+  deleteExpense.value = null;
 }
 </script>

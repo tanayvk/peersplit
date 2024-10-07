@@ -77,7 +77,7 @@ onMounted(() => {
 });
 function fixValue(member) {
   nextTick(() => {
-    const fixed = model.value[member].match(/\d+(\.\d*)?/)?.[0] || "";
+    const fixed = model.value[member].match(/\d+(\.\d?\d?)?/)?.[0] || "";
     if (model.value[member] !== fixed) model.value[member] = fixed;
   });
 }

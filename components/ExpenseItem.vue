@@ -1,5 +1,8 @@
 <template>
-  <div class="px-3 py-2 flex gap-3 bg-gray-100 dark:bg-gray-800">
+  <div
+    @click="$emit('edit')"
+    class="px-3 py-2 flex gap-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+  >
     <div class="flex-grow flex justify-between items-center">
       <div v-if="expense.type === 'expense'" class="flex flex-col">
         <div class="gap-1 flex items-center pb-1">
@@ -21,7 +24,15 @@
             : Object.keys(expense.payers)[0]
         }}
         paid
-        {{ Object.keys(expense.splitters)[0] }}
+        {{
+          Object.keys(expense.splitters)[0] === myID
+            ? "you"
+            : Object.keys(expense.splitters)[0]
+        }}
+        ${{ Object.values(expense.payers)[0] }}
+        <span class="text-sm text-primary-600/80 dark:text-primary-300/80"
+          >&middot; {{ moment(expense.created_at).format("MMM DD") }}</span
+        >
       </div>
       <span :class="['text-xl', getColorForValue(value)]"
         >${{ Math.abs(value) }}</span
@@ -36,8 +47,8 @@ const { expense } = defineProps(["expense"]);
 const { myID } = useGroups().getGroupByID(useRoute().params.group_id);
 const value = computed(() => {
   const computedExpense = computeTransaction(expense);
-  return (
-    (computedExpense.payers[myID] || 0) - (computedExpense.splits[myID] || 0)
+  return round(
+    (computedExpense.payers[myID] || 0) - (computedExpense.splits[myID] || 0),
   );
 });
 </script>

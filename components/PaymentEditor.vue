@@ -2,7 +2,9 @@
   <UCard>
     <template #header>
       <div class="flex justify-between items-center">
-        <span class="font-medium">Record Payment</span>
+        <span class="font-medium"
+          >{{ expenseItem ? "Update" : "Record" }} Payment</span
+        >
         <UButton
           @click="$emit('close')"
           variant="ghost"
@@ -41,11 +43,20 @@
     <template #footer>
       <div class="flex gap-2">
         <UButton
-          @click="$emit('record', getPaymentTransaction())"
+          @click="
+            $emit(expenseItem ? 'update' : 'record', getPaymentTransaction())
+          "
           :loading="adding"
           variant="outline"
           :disabled="!paidBy || !paidTo || !model.hello || paidBy === paidTo"
-          >Record</UButton
+          >{{ expenseItem ? "Update" : "Record" }} Payment</UButton
+        >
+        <UButton
+          v-if="expenseItem"
+          @click="$emit('delete', expense)"
+          variant="ghost"
+          color="rose"
+          >Delete</UButton
         >
       </div>
     </template>
@@ -54,23 +65,25 @@
 
 <script setup>
 import { nanoid } from "nanoid";
+const { expenseItem } = defineProps(["expenseItem"]);
 const adding = ref(false),
-  paidBy = ref(null),
-  paidTo = ref(null);
+  paidBy = ref(Object.keys(expenseItem?.payers || {})?.[0] || null),
+  paidTo = ref(Object.keys(expenseItem?.splitters || {})?.[0] || null);
 // TODO: remove ugly validation, why the fuck do i need to pass a model from outside
-const model = defineModel();
+const model = defineModel({ default: { hello: "" } });
+model.value.hello = Object.values(expenseItem?.payers || {})?.[0] || "";
 
 const members = ["Tanay", "John", "Jane"].map((x) => ({ id: x, name: x }));
 
 function fixValue(member) {
   nextTick(() => {
-    const fixed = model.value[member].match(/\d+(\.\d*)?/)?.[0] || "";
+    const fixed = model.value[member].match(/\d+(\.\d?\d?)?/)?.[0] || "";
     if (model.value[member] !== fixed) model.value[member] = fixed;
   });
 }
 function getPaymentTransaction() {
   return {
-    id: nanoid(),
+    id: expenseItem?.id || nanoid(),
     type: "payment",
     created_at: new Date(),
     splitType: 1, // doesn't matter

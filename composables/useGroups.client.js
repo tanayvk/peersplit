@@ -25,18 +25,27 @@ import { defineStore } from "pinia";
 //   totalCost // computed
 // }
 
+export const round = (val) =>
+  Math.round((Number(val) + Number.EPSILON) * 100) / 100;
+
 export const groupGetMyBalance = (group) => {
   const balances = groupGetBalances(group);
   return balances[group.myID];
 };
 
 export const computeTransaction = (transaction) => {
+  for (const [payer, val] of Object.entries(transaction.payers)) {
+    transaction.payers[payer] = round(val);
+  }
+  for (const [splitter, val] of Object.entries(transaction.splitters)) {
+    transaction.splitters[splitter] = round(val);
+  }
   const totalCost = Object.values(transaction.payers).reduce(
-    (a, b) => Number(a) + Number(b),
+    (a, b) => round(Number(a) + Number(b)),
     0,
   );
   const totalSplit = Object.values(transaction.splitters).reduce(
-    (a, b) => Number(a) + Number(b),
+    (a, b) => round(Number(a) + Number(b)),
     0,
   );
   const splits = { ...transaction.splitters };
@@ -50,16 +59,16 @@ export const computeTransaction = (transaction) => {
       splits[split] = totalCost * splits[split];
       splits[split] /= totalSplit;
     }
-    // TODO: make sure all amounts in transactions are sanitized to 2 decimal places
+    splits[split] = round(splits[split]);
   }
   const newTotalSplit = Object.values(splits).reduce(
-    (a, b) => Number(a) + Number(b),
+    (a, b) => round(Number(a) + Number(b)),
     0,
   );
   if (members[0]) {
     const diff = totalCost - newTotalSplit;
     if (diff > 0) {
-      splits[members[0]] += diff;
+      splits[members[0]] = round(splits[members[0]] + diff);
     }
   }
   return {
@@ -75,14 +84,17 @@ export const groupGetBalances = (group) => {
     balances[member] = 0;
   }
   for (const transaction of Object.values(group.transactions || {})) {
-    const computedTrasaction = computeTransaction(transaction);
-    for (const [payer, value] of Object.entries(computedTrasaction.payers)) {
+    const computedTransaction = computeTransaction(transaction);
+    console.log("computed", JSON.stringify(computedTransaction));
+    for (const [payer, value] of Object.entries(computedTransaction.payers)) {
       balances[payer] ||= 0;
-      balances[payer] += Number(value);
+      balances[payer] = round(balances[payer] + Number(value));
     }
-    for (const [splitter, value] of Object.entries(computedTrasaction.splits)) {
+    for (const [splitter, value] of Object.entries(
+      computedTransaction.splits,
+    )) {
       balances[splitter] ||= 0;
-      balances[splitter] -= Number(value);
+      balances[splitter] = round(balances[splitter] - Number(value));
     }
   }
   return balances;
@@ -95,7 +107,7 @@ export const groupGetPayments = (group) => {
     a,
   ]);
   balances.sort();
-  console.log("wtf", balances);
+  console.log("wtf", JSON.stringify(balances));
   let i = 0,
     j = balances.length - 1;
   while (i < j) {
@@ -157,8 +169,10 @@ export const useGroups = defineStore("groups", {
       return (groupID) => {
         const groups = [];
         let currentGroup = {};
-        for (const transactionID of state.groups[groupID]?.transactionOrder ||
-          []) {
+        const transactionOrder = [
+          ...(state.groups[groupID]?.transactionOrder || []),
+        ].reverse();
+        for (const transactionID of transactionOrder) {
           const transaction =
             state.groups[groupID]?.transactions?.[transactionID];
           if (transaction) {
@@ -183,12 +197,12 @@ export const useGroups = defineStore("groups", {
     getGroupByID(state) {
       return (id) => state.groups[id];
     },
-    getBalancesByGroupID(state) {
+    getBalancesByGroupID() {
       return (id) => {
         return groupGetBalances(this.getGroupByID(id));
       };
     },
-    getPaymentsByGroupID(state) {
+    getPaymentsByGroupID() {
       return (id) => groupGetPayments(this.getGroupByID(id));
     },
   },

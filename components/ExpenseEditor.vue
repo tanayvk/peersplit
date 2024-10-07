@@ -2,7 +2,9 @@
   <UCard>
     <template #header>
       <div class="flex justify-between items-center">
-        <span class="font-medium">Add Expense</span>
+        <span class="font-medium"
+          >{{ expenseItem ? "Update" : "Add" }} Expense</span
+        >
         <UButton
           @click="$emit('close')"
           variant="ghost"
@@ -15,7 +17,13 @@
       <UFormGroup label="Description">
         <UInput v-model="expense.description" placeholder="ex: Groceries" />
       </UFormGroup>
-      <UFormGroup label="Paid By">
+      <UFormGroup>
+        <template #label>
+          <span>Paid By</span
+          ><span class="font-normal color-positive" v-if="paid !== 0">
+            &middot; {{ paid }}</span
+          >
+        </template>
         <MemberValueEdit
           :members="members"
           addLabel="Add Payers"
@@ -34,7 +42,7 @@
       <UFormGroup>
         <template #label>
           <span>Split Between</span
-          ><span class="font-normal text-rose-400" v-if="remaining !== 0">
+          ><span class="font-normal color-negative" v-if="remaining !== 0">
             &middot; {{ remaining }} remaining</span
           >
         </template>
@@ -49,16 +57,24 @@
     <template #footer>
       <div class="flex gap-2">
         <UButton
-          @click="$emit('add', expense)"
+          @click="$emit(expenseItem ? 'update' : 'add', expense)"
           :loading="adding"
           variant="outline"
           :disabled="
             Object.keys(expense.splitters).length === 0 ||
+            (expense.splitType === 4 && split === 0) ||
             paid === 0 ||
             !expense.description ||
             remaining !== 0
           "
-          >Add Expense</UButton
+          >{{ expenseItem ? "Update" : "Add" }} Expense</UButton
+        >
+        <UButton
+          v-if="expenseItem"
+          @click="$emit('delete', expense)"
+          variant="ghost"
+          color="rose"
+          >Delete</UButton
         >
       </div>
     </template>
@@ -68,16 +84,20 @@
 <script setup>
 import { nanoid } from "nanoid";
 
-const groupID = useRoute().params.group_id;
-const expense = ref({
-  id: nanoid(),
-  type: "expense",
-  description: "",
-  splitType: 1,
-  payers: {},
-  splitters: {},
-  created_at: new Date(),
-});
+const { expenseItem } = defineProps(["expenseItem"]);
+const expense = ref(
+  expenseItem
+    ? JSON.parse(JSON.stringify(expenseItem))
+    : {
+        id: nanoid(),
+        type: "expense",
+        description: "",
+        splitType: 1,
+        payers: {},
+        splitters: {},
+        created_at: new Date(),
+      },
+);
 const paid = computed(() =>
   Object.values(expense.value.payers).reduce(
     (a, b) => Number(a) + Number(b),
