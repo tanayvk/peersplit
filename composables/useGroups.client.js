@@ -85,7 +85,6 @@ export const groupGetBalances = (group) => {
   }
   for (const transaction of Object.values(group.transactions || {})) {
     const computedTransaction = computeTransaction(transaction);
-    console.log("computed", JSON.stringify(computedTransaction));
     for (const [payer, value] of Object.entries(computedTransaction.payers)) {
       balances[payer] ||= 0;
       balances[payer] = round(balances[payer] + Number(value));
@@ -107,7 +106,6 @@ export const groupGetPayments = (group) => {
     a,
   ]);
   balances.sort();
-  console.log("wtf", JSON.stringify(balances));
   let i = 0,
     j = balances.length - 1;
   while (i < j) {
@@ -119,7 +117,7 @@ export const groupGetPayments = (group) => {
       payments.push({
         from: balances[i][1],
         to: balances[j][1],
-        value: balances[j][0],
+        value: round(balances[j][0]),
       });
       balances[i][0] += balances[j][0];
       balances[j][0] = 0;
@@ -127,7 +125,7 @@ export const groupGetPayments = (group) => {
       payments.push({
         from: balances[i][1],
         to: balances[j][1],
-        value: -balances[i][0],
+        value: round(-balances[i][0]),
       });
       balances[j][0] += balances[i][0];
       balances[i][0] = 0;
