@@ -197,7 +197,7 @@ export const useGroups = defineStore("groups", {
       if (!group.members) {
         group.members = {};
       }
-      group.members[member.site_id] = member;
+      group.members[member.id] = member;
       const groupDB = await getGroupDB(groupID);
       await groupDB.exec(
         `INSERT INTO members (id, name, site_id) VALUES (?, ?, ?)`,
