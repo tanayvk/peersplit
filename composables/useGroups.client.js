@@ -144,22 +144,82 @@ export const useGroups = defineStore("groups", {
       this.groups = groups;
       this.loading = false;
     },
-    addTransaction(groupID, transaction) {
+    async addTransaction(groupID, transaction) {
       const group = this.groups[groupID];
       group.transactions[transaction.id] = transaction;
       group.transactionOrder.push(transaction.id);
-      // TODO: might need to optionally sort if we use this method for syncing also
+      const groupDB = await getGroupDB(groupID);
+      await groupDB.exec(
+        `INSERT INTO transactions (id, type, description, split_type, data) VALUES (?, ?, ?, ?, ?)`,
+        [
+          transaction.id,
+          transaction.type,
+          transaction.description,
+          transaction.splitType,
+          JSON.stringify({
+            payers: transaction.payers,
+            splitters: transaction.splitters,
+          }),
+        ],
+      );
     },
-    updateTransaction(groupID, transaction) {
+    async updateTransaction(groupID, transaction) {
       const group = this.groups[groupID];
       group.transactions[transaction.id] = transaction;
+      const groupDB = await getGroupDB(groupID);
+      await groupDB.exec(
+        `UPDATE transactions SET type = ?, description = ?, split_type = ?, data = ? WHERE id = ?`,
+        [
+          transaction.type,
+          transaction.description,
+          transaction.splitType,
+          JSON.stringify({
+            payers: transaction.payers,
+            splitters: transaction.splitters,
+          }),
+          transaction.id,
+        ],
+      );
     },
-    deleteTransaction(groupID, transactionID) {
+    async deleteTransaction(groupID, transactionID) {
       const group = this.groups[groupID];
       delete group.transactions[transactionID];
       group.transactionOrder = group.transactionOrder.filter(
         (id) => id !== transactionID,
       );
+      const groupDB = await getGroupDB(groupID);
+      await groupDB.exec(`DELETE FROM transactions WHERE id = ?`, [
+        transactionID,
+      ]);
+    },
+    async addMember(groupID, member) {
+      const group = this.groups[groupID];
+      if (!group.members) {
+        group.members = {};
+      }
+      group.members[member.site_id] = member;
+      const groupDB = await getGroupDB(groupID);
+      await groupDB.exec(
+        `INSERT INTO members (id, name, site_id) VALUES (?, ?, ?)`,
+        [member.id, member.name, member.site_id],
+      );
+    },
+    async updateMember(groupID, member) {
+      const group = this.groups[groupID];
+      group.members[member.site_id] = member;
+      const groupDB = await getGroupDB(groupID);
+      await groupDB.exec(
+        `UPDATE members SET name = ?, site_id = ? WHERE id = ?`,
+        [member.name, member.site_id, member.id],
+      );
+    },
+    async deleteMember(groupID, id) {
+      const group = this.groups[groupID];
+      if (group.members) {
+        delete group.members[id];
+      }
+      const groupDB = await getGroupDB(groupID);
+      await groupDB.exec(`DELETE FROM members WHERE id = ?`, [id]);
     },
   },
   getters: {
@@ -202,6 +262,19 @@ export const useGroups = defineStore("groups", {
     },
     getPaymentsByGroupID() {
       return (id) => groupGetPayments(this.getGroupByID(id));
+    },
+    getMembersList(state) {
+      return (id) => Object.values(state.groups[id]?.members || {});
+    },
+    getMemberName(state) {
+      return (groupID, memberID, lowercase) => {
+        const group = state.groups[groupID];
+        return memberID === group.myID
+          ? lowercase
+            ? "you"
+            : "You"
+          : group.members[memberID]?.name;
+      };
     },
   },
 });

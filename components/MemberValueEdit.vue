@@ -7,7 +7,7 @@
       >
         <div class="flex-grow flex items-center">
           <span class="font-light text-gray-700 dark:text-gray-300">{{
-            member
+            useGroups().getMemberName(groupID, member)
           }}</span>
         </div>
         <div class="flex items-center gap-1">
@@ -56,6 +56,7 @@
 </template>
 
 <script setup>
+const groupID = useRoute().params.group_id;
 const model = defineModel();
 const { addLabel, members, noValues } = defineProps([
   "addLabel",

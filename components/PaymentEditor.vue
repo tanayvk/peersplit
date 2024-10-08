@@ -73,7 +73,8 @@ const adding = ref(false),
 const model = defineModel({ default: { hello: "" } });
 model.value.hello = Object.values(expenseItem?.payers || {})?.[0] || "";
 
-const members = ["Tanay", "John", "Jane"].map((x) => ({ id: x, name: x }));
+const groupID = useRoute().params.group_id;
+const members = computed(() => useGroups().getMembersList(groupID));
 
 function fixValue(member) {
   nextTick(() => {

@@ -103,29 +103,12 @@ const groupMigrations = [
     await createTable({
       db: groupDB,
       tableName: "members",
-      columns: "name",
+      columns: "name, site_id",
     });
     await createTable({
       db: groupDB,
       tableName: "transactions",
-      columns: "description, split_type",
-    });
-    await createTable({
-      db: groupDB,
-      tableName: "transaction_data",
-      columns: "transaction_id, member_id, type, value, amount",
-    });
-    await createIndex({
-      db: groupDB,
-      tableName: "transaction_data",
-      indexName: "by_transaction",
-      fields: "transaction_id",
-    });
-    await createIndex({
-      db: groupDB,
-      tableName: "transaction_data",
-      indexName: "by_member",
-      fields: "member_id",
+      columns: "type, description, split_type, data, created_by, updated_by",
     });
   },
 ];
@@ -150,7 +133,7 @@ export const clean = async () => {
 };
 
 export const dbInit = async () => {
-  // await clean(); // Optional: Clean previous databases
+  // await clean();
   sqlite = await initWasm(() => wasmUrl);
   db = await sqlite.open("peersplit-main");
   await runMigrations();
@@ -192,30 +175,94 @@ export const setGroupName = async (id: string, name: string) => {
 export const createGroup = async (name: string) => {
   const id = nanoid();
   await db.exec("INSERT INTO groups (id) VALUES (?)", [id]);
-  await initGroupDb(id);
+  const groupDB = await initGroupDb(id);
   await setGroupName(id, name);
+  const siteID = await getSiteID(groupDB);
+  await groupDB.exec(
+    "INSERT INTO members (id, name, site_id) VALUES (?, ?, ?)",
+    [nanoid(), useName().value, siteID],
+  );
   await updateGroups();
   return id;
 };
 
+export const getSiteID = async (db: any) => {
+  const [{ site_id }] = await db.execO(
+    "SELECT hex(crsql_site_id()) AS site_id",
+  );
+  return site_id;
+};
+
 export const getGroups = async (): Promise<
-  Record<string, { id: string; name: string }>
+  Record<
+    string,
+    {
+      id: string;
+      myID: string;
+      name: string;
+      transactions: Record<string, any>;
+      transactionOrder: string[];
+      members: Record<string, any>;
+    }
+  >
 > => {
   const groupsIDs = await db.execO("SELECT id FROM groups");
   const groups: Record<string, any> = {};
+  let myID: any;
   await Promise.all(
     groupsIDs.map(async (group: { id: string }) => {
-      const [{ value: name } = { value: "" }] = await groupDBs[group.id].execO(
+      const groupDB = groupDBs[group.id];
+      const mySiteID = await getSiteID(groupDB);
+      const [{ value: name } = { value: "" }] = await groupDB.execO(
         "SELECT value FROM kv WHERE id = 'name'",
       );
+      const transactionsList = await groupDB.execO(
+        "SELECT id, description, created_at, updated_at, type, split_type, data FROM transactions ORDER BY created_at ASC",
+      );
+      const transactions = {};
+      transactionsList.forEach((transaction) => {
+        const { payers, splitters } = JSON.parse(transaction.data);
+        transactions[transaction.id] = {
+          id: transaction.id,
+          description: transaction.description,
+          created_at: transaction.created_at,
+          updated_at: transaction.updated_at,
+          payers: payers,
+          splitters: splitters,
+          type: transaction.type,
+          splitType: transaction.split_type,
+        };
+      });
+      const transactionOrder = transactionsList.map(
+        (transaction) => transaction.id,
+      );
+      const membersList = await groupDBs[group.id].execO(
+        "SELECT id, site_id, name FROM members",
+      );
+      const members: Record<string, any> = {};
+      membersList.forEach((member: any) => {
+        if (member.site_id === mySiteID) {
+          myID = member.id;
+        }
+        members[member.id] = {
+          id: member.id,
+          siteID: member.site_id,
+          name: member.name,
+        };
+      });
       groups[group.id] = {
         id: group.id,
-        myID: "Tanay",
+        myID,
         name: name || "Unnamed Group",
-        transactions: {},
-        transactionOrder: [],
+        transactions,
+        transactionOrder,
+        members,
       };
     }),
   );
   return groups;
+};
+
+export const applyChangesForGroup = async (groupID, changes) => {
+  console.log(groupID, changes);
 };

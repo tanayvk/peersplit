@@ -19,9 +19,9 @@
           <span
             v-for="payment in payments"
             class="flex items-center gap-1 text-sm"
-            >- {{ payment.from === myID ? "You" : payment.from }}
+            >- {{ useGroups().getMemberName(groupID, payment.from) }}
             {{ payment.from === myID ? "owe" : "owes" }}
-            {{ payment.to === myID ? "you" : payment.to }}
+            {{ useGroups().getMemberName(groupID, payment.to, true) }}
             <span
               :class="[
                 'text-md',

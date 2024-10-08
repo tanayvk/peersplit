@@ -116,5 +116,6 @@ const remaining = computed(() => {
   return total - split.value;
 });
 const adding = ref(false);
-const members = ["Tanay", "John", "Jane"].map((x) => ({ id: x, name: x }));
+const groupID = useRoute().params.group_id;
+const members = computed(() => useGroups().getMembersList(groupID));
 </script>

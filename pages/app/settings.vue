@@ -1,9 +1,7 @@
 <template>
   <div class="px-4 py-2 flex flex-col h-full">
     <div class="space-y-2 flex-grow">
-      <UFormGroup label="Name">
-        <UInput placeholder="John Doe" />
-      </UFormGroup>
+      <SettingsName />
       <UFormGroup label="Color Mode">
         <DarkModeSwitch />
       </UFormGroup>

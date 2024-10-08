@@ -1,6 +1,6 @@
 <template>
   <SpinLoader height="h-full" v-if="loading" />
-  <div v-if="!loading" class="flex flex-col gap-2 h-full px-2">
+  <div v-if="!loading && group" class="flex flex-col gap-2 h-full px-2">
     <div class="h-12 flex justify-between items-center gap-2">
       <UButton
         to="/app/groups"
@@ -102,11 +102,27 @@ const showExpenseEditor = ref(false),
   ugly = ref({ hello: "" }),
   expense = ref(null),
   deleteExpense = ref(null);
-const groupID = useRoute().params.group_id;
 // TODO: handle loading states
 const { getGroupByID, loading, getGroupedTransactionsByGroupID } = storeToRefs(
   useGroups(),
 );
+
+const groupID = useRoute().params.group_id;
+const group = computed(() => getGroupByID.value(groupID));
+
+watch(loading, () => {
+  checkGroup();
+});
+onMounted(() => {
+  checkGroup();
+});
+
+function checkGroup() {
+  if (!loading.value && !group.value) {
+    navigateTo("/app/groups");
+  }
+}
+
 function add(expense) {
   useGroups().addTransaction(groupID, expense);
   clearEditors();

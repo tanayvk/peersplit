@@ -14,20 +14,18 @@
         <span
           v-for="[payer, val] in Object.entries(expense.payers)"
           class="text-sm font-light"
-          >{{ payer === myID ? "You" : payer }} paid ${{ val }}</span
+          >{{ useGroups().getMemberName(groupID, payer) }} paid ${{ val }}</span
         >
       </div>
       <div v-else>
-        {{
-          Object.keys(expense.payers)[0] === myID
-            ? "You"
-            : Object.keys(expense.payers)[0]
-        }}
+        {{ useGroups().getMemberName(groupID, Object.keys(expense.payers)[0]) }}
         paid
         {{
-          Object.keys(expense.splitters)[0] === myID
-            ? "you"
-            : Object.keys(expense.splitters)[0]
+          useGroups().getMemberName(
+            groupID,
+            Object.keys(expense.splitters)[0],
+            true,
+          )
         }}
         ${{ Object.values(expense.payers)[0] }}
         <span class="text-sm text-primary-600/80 dark:text-primary-300/80"
@@ -43,8 +41,9 @@
 
 <script setup>
 import moment from "moment";
+const groupID = useRoute().params.group_id;
 const { expense } = defineProps(["expense"]);
-const { myID } = useGroups().getGroupByID(useRoute().params.group_id);
+const { myID } = useGroups().getGroupByID(groupID);
 const value = computed(() => {
   const computedExpense = computeTransaction(expense);
   return round(
