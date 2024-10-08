@@ -12,20 +12,17 @@
       >Create Group</UButton
     >
     <SpinLoader v-if="loading" height="flex-grow" />
-    <UAlert
-      icon="i-heroicons-information-circle"
-      v-if="!loading && groupsList.length === 0"
-      title="No groups"
-      description="You are not part of any groups."
-      color="primary"
-      variant="outline"
-    />
-    <div class="space-y-2" v-if="!loading && groupsList.length > 0">
-      <GroupItem
-        v-for="group in Object.values(groupsList)"
-        :key="group.id"
-        :group="group"
+    <div v-if="!loading && groupsList?.length === 0">
+      <UAlert
+        icon="i-heroicons-information-circle"
+        title="No groups"
+        description="You are not part of any groups."
+        color="primary"
+        variant="outline"
       />
+    </div>
+    <div class="space-y-2" v-if="!loading && groupsList.length > 0">
+      <GroupItem v-for="group in groupsList" :key="group.id" :group="group" />
     </div>
     <UModal v-model="showCreateGroupModal">
       <UCard>
