@@ -6,7 +6,7 @@
       rounded: 'rounded-none',
       shadow: 'shadow-none',
     }"
-    @click="navigateTo(`/app/groups/group/${group.id}`)"
+    @click="go(group.id)"
   >
     <div class="flex items-center space-y-2">
       <div
@@ -28,5 +28,8 @@
 
 <script setup>
 const { group } = defineProps(["group"]);
-const balance = groupGetMyBalance(group);
+const balance = computed(() => groupGetMyBalance(group));
+async function go(id) {
+  navigateTo(`/app/groups/group/${id}`);
+}
 </script>

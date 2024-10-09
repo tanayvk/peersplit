@@ -43,11 +43,15 @@
 import moment from "moment";
 const groupID = useRoute().params.group_id;
 const { expense } = defineProps(["expense"]);
-const { myID } = useGroups().getGroupByID(groupID);
+const myID = computed(() => {
+  const { myID } = useGroups().getGroupByID(groupID);
+  return myID;
+});
 const value = computed(() => {
   const computedExpense = computeTransaction(expense);
   return round(
-    (computedExpense.payers[myID] || 0) - (computedExpense.splits[myID] || 0),
+    (computedExpense.payers[myID.value] || 0) -
+      (computedExpense.splits[myID.value] || 0),
   );
 });
 </script>

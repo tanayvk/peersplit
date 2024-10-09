@@ -3,14 +3,24 @@
     v-if="useRoute().name === 'app-groups'"
     class="flex flex-col h-full px-3 pt-5 space-y-4"
   >
-    <UButton
-      variant="solid"
-      icon="i-heroicons-plus"
-      size="lg"
-      class="w-full"
-      @click="showCreateGroupModal = true"
-      >Create Group</UButton
-    >
+    <div class="flex w-full gap-1">
+      <UButton
+        class="flex-grow"
+        variant="solid"
+        icon="i-heroicons-plus"
+        size="lg"
+        @click="showCreateGroupModal = true"
+        >Create Group</UButton
+      >
+      <UButton
+        class="flex-grow"
+        variant="outline"
+        icon="i-heroicons-arrow-right-circle"
+        size="lg"
+        to="/app/groups/join"
+        >Join Group</UButton
+      >
+    </div>
     <SpinLoader v-if="loading" height="flex-grow" />
     <div v-if="!loading && groupsList?.length === 0">
       <UAlert

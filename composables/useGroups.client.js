@@ -144,6 +144,10 @@ export const useGroups = defineStore("groups", {
       this.groups = groups;
       this.loading = false;
     },
+    setGroup(group) {
+      this.groups ||= {};
+      this.groups[group.id] = group;
+    },
     async addTransaction(groupID, transaction) {
       const group = this.groups[groupID];
       group.transactions[transaction.id] = transaction;
@@ -162,6 +166,7 @@ export const useGroups = defineStore("groups", {
           }),
         ],
       );
+      pushChanges(group);
     },
     async updateTransaction(groupID, transaction) {
       const group = this.groups[groupID];
@@ -180,6 +185,7 @@ export const useGroups = defineStore("groups", {
           transaction.id,
         ],
       );
+      pushChanges(group);
     },
     async deleteTransaction(groupID, transactionID) {
       const group = this.groups[groupID];
@@ -191,6 +197,7 @@ export const useGroups = defineStore("groups", {
       await groupDB.exec(`DELETE FROM transactions WHERE id = ?`, [
         transactionID,
       ]);
+      pushChanges(group);
     },
     async addMember(groupID, member) {
       const group = this.groups[groupID];
@@ -201,17 +208,19 @@ export const useGroups = defineStore("groups", {
       const groupDB = await getGroupDB(groupID);
       await groupDB.exec(
         `INSERT INTO members (id, name, site_id) VALUES (?, ?, ?)`,
-        [member.id, member.name, member.site_id],
+        [member.id, member.name, member.siteID],
       );
+      pushChanges(group);
     },
     async updateMember(groupID, member) {
       const group = this.groups[groupID];
-      group.members[member.site_id] = member;
+      group.members[member.id] = member;
       const groupDB = await getGroupDB(groupID);
       await groupDB.exec(
         `UPDATE members SET name = ?, site_id = ? WHERE id = ?`,
-        [member.name, member.site_id, member.id],
+        [member.name, member.siteID, member.id],
       );
+      pushChanges(group);
     },
     async deleteMember(groupID, id) {
       const group = this.groups[groupID];
@@ -220,6 +229,22 @@ export const useGroups = defineStore("groups", {
       }
       const groupDB = await getGroupDB(groupID);
       await groupDB.exec(`DELETE FROM members WHERE id = ?`, [id]);
+      pushChanges(group);
+    },
+    async assignMember(groupID, id) {
+      const group = this.groups[groupID];
+      const old = group.myID;
+      group.myID = id;
+      if (old) {
+        this.updateMember(groupID, {
+          ...group.members[old],
+          siteID: null,
+        });
+      }
+      this.updateMember(groupID, {
+        ...group.members[id],
+        siteID: group.mySiteID,
+      });
     },
   },
   getters: {
@@ -284,4 +309,8 @@ export const useGroups = defineStore("groups", {
 
 export const updateGroups = async () => {
   useGroups().setGroups(await getGroups());
+};
+
+export const updateGroup = async (id) => {
+  useGroups().setGroup(await getGroup(id));
 };

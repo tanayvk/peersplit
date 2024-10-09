@@ -174,16 +174,22 @@ export const setGroupName = async (id: string, name: string) => {
 
 export const createGroup = async (name: string) => {
   const id = nanoid();
-  await db.exec("INSERT INTO groups (id) VALUES (?)", [id]);
-  const groupDB = await initGroupDb(id);
+  const groupDB = await createEmptyGroup(id);
   await setGroupName(id, name);
   const siteID = await getSiteID(groupDB);
   await groupDB.exec(
     "INSERT INTO members (id, name, site_id) VALUES (?, ?, ?)",
     [nanoid(), useName().value, siteID],
   );
-  await updateGroups();
+  await updateGroup(id);
+  await createUser(id, id);
+  listenGroup(id);
   return id;
+};
+
+export const createEmptyGroup = async (id: string) => {
+  await db.exec("INSERT INTO groups (id) VALUES (?)", [id]);
+  return await initGroupDb(id);
 };
 
 export const getSiteID = async (db: any) => {
@@ -191,6 +197,59 @@ export const getSiteID = async (db: any) => {
     "SELECT hex(crsql_site_id()) AS site_id",
   );
   return site_id;
+};
+
+export const getGroup = async (id: string) => {
+  let myID;
+  const groupDB = groupDBs[id];
+  if (!groupDB) return null;
+  const mySiteID = await getSiteID(groupDB);
+  const [{ value: name } = { value: "" }] = await groupDB.execO(
+    "SELECT value FROM kv WHERE id = 'name'",
+  );
+  const transactionsList = await groupDB.execO(
+    "SELECT id, description, created_at, updated_at, type, split_type, data FROM transactions ORDER BY created_at ASC",
+  );
+  const transactions = {};
+  transactionsList.forEach((transaction) => {
+    const { payers, splitters } = JSON.parse(transaction.data);
+    transactions[transaction.id] = {
+      id: transaction.id,
+      description: transaction.description,
+      created_at: transaction.created_at,
+      updated_at: transaction.updated_at,
+      payers: payers,
+      splitters: splitters,
+      type: transaction.type,
+      splitType: transaction.split_type,
+    };
+  });
+  const transactionOrder = transactionsList.map(
+    (transaction) => transaction.id,
+  );
+  const membersList = await groupDBs[id].execO(
+    "SELECT id, site_id, name FROM members",
+  );
+  const members: Record<string, any> = {};
+  membersList.forEach((member: any) => {
+    if (member.site_id === mySiteID) {
+      myID = member.id;
+    }
+    members[member.id] = {
+      id: member.id,
+      siteID: member.site_id,
+      name: member.name,
+    };
+  });
+  return {
+    id,
+    myID,
+    mySiteID,
+    name: name || "Unnamed Group",
+    transactions,
+    transactionOrder,
+    members,
+  };
 };
 
 export const getGroups = async (): Promise<
@@ -208,61 +267,54 @@ export const getGroups = async (): Promise<
 > => {
   const groupsIDs = await db.execO("SELECT id FROM groups");
   const groups: Record<string, any> = {};
-  let myID: any;
   await Promise.all(
-    groupsIDs.map(async (group: { id: string }) => {
-      const groupDB = groupDBs[group.id];
-      const mySiteID = await getSiteID(groupDB);
-      const [{ value: name } = { value: "" }] = await groupDB.execO(
-        "SELECT value FROM kv WHERE id = 'name'",
-      );
-      const transactionsList = await groupDB.execO(
-        "SELECT id, description, created_at, updated_at, type, split_type, data FROM transactions ORDER BY created_at ASC",
-      );
-      const transactions = {};
-      transactionsList.forEach((transaction) => {
-        const { payers, splitters } = JSON.parse(transaction.data);
-        transactions[transaction.id] = {
-          id: transaction.id,
-          description: transaction.description,
-          created_at: transaction.created_at,
-          updated_at: transaction.updated_at,
-          payers: payers,
-          splitters: splitters,
-          type: transaction.type,
-          splitType: transaction.split_type,
-        };
-      });
-      const transactionOrder = transactionsList.map(
-        (transaction) => transaction.id,
-      );
-      const membersList = await groupDBs[group.id].execO(
-        "SELECT id, site_id, name FROM members",
-      );
-      const members: Record<string, any> = {};
-      membersList.forEach((member: any) => {
-        if (member.site_id === mySiteID) {
-          myID = member.id;
-        }
-        members[member.id] = {
-          id: member.id,
-          siteID: member.site_id,
-          name: member.name,
-        };
-      });
-      groups[group.id] = {
-        id: group.id,
-        myID,
-        name: name || "Unnamed Group",
-        transactions,
-        transactionOrder,
-        members,
-      };
+    groupsIDs.map(async ({ id }: any) => {
+      const group = await getGroup(id);
+      groups[group.id] = group;
     }),
   );
   return groups;
 };
 
-export const applyChangesForGroup = async (groupID, changes) => {
-  console.log(groupID, changes);
+export const applyChangesForGroup = async (groupID: any, changes: any[]) => {
+  if (changes.length === 0) return;
+  const db = await getGroupDB(groupID);
+  await db.tx(async (tx: any) => {
+    for (const change of changes) {
+      // TODO: apply some filter to not apply delete changes?
+      // i don't know, i'll worry about extra security later
+      // for now, all damage will only be done to the group
+      await tx.exec(
+        "INSERT INTO crsql_changes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        change.map((c: any) => {
+          if (c?.v) {
+            return new Uint8Array(c.v.split(","));
+          }
+          return c;
+        }),
+      );
+    }
+  });
+  updateGroup(groupID);
+};
+
+export const getGroupChanges = async (groupID: string, index: number) => {
+  const db = await getGroupDB(groupID);
+  const siteID = await getSiteID(db);
+  const changes = await db.execA(
+    "SELECT * FROM crsql_changes WHERE db_version > ? AND hex(site_id) = ?",
+    [index, siteID],
+  );
+  return [
+    siteID,
+    changes.map((c) => {
+      return c.map((cc) => {
+        if (cc && typeof cc === "object") {
+          return { v: cc.join(",") };
+        }
+        return cc;
+      });
+    }),
+    changes.reduce((a, b) => Math.max(a, b[5]), -1),
+  ];
 };

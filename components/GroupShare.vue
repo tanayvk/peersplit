@@ -25,11 +25,38 @@
         </div>
       </div>
       <div>
-        <span class="font-medium py-1 block">Members</span>
+        <div class="flex gap-2 items-center">
+          <span class="font-medium py-1 block">Members </span>
+          <div v-if="myID && !assigning">
+            <UButton @click="assigning = true" variant="link" class="p-0"
+              >Assign</UButton
+            >
+          </div>
+          <div v-if="myID && assigning">
+            <UButton @click="assigning = false" variant="link" class="p-0"
+              >Cancel</UButton
+            >
+          </div>
+        </div>
         <div v-for="member in members">
-          <span class="font-light">
-            {{ member.name }}
-          </span>
+          <div class="flex gap-2 items-center">
+            <span
+              :class="[
+                'font-light text-primary-700 dark:text-primary-300',
+                member.id === myID && 'font-medium',
+              ]"
+            >
+              {{ member.name }}
+              {{ member.id === myID ? " (You)" : "" }}
+            </span>
+            <UButton
+              variant="link"
+              class="p-0"
+              v-if="(!myID || assigning) && !member.siteID"
+              @click="assign(member.id)"
+              >That's me!</UButton
+            >
+          </div>
         </div>
       </div>
       <UDivider />
@@ -64,7 +91,12 @@
 <script setup>
 import { nanoid } from "nanoid";
 const groupID = useRoute().params.group_id;
+const assigning = ref(false);
 const members = computed(() => useGroups().getMembersList(groupID));
+const myID = computed(() => {
+  const { myID } = useGroups().getGroupByID(groupID);
+  return myID;
+});
 const name = ref(""),
   copied = ref(false);
 const link = import.meta.client
@@ -73,6 +105,10 @@ const link = import.meta.client
 function add() {
   useGroups().addMember(groupID, { id: nanoid(), name: name.value });
   name.value = "";
+}
+function assign(id) {
+  assigning.value = false;
+  useGroups().assignMember(groupID, id);
 }
 function copy() {
   navigator.clipboard.writeText(link);

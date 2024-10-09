@@ -27,6 +27,22 @@
         />
       </div>
     </div>
+    <div v-if="group && !group.myID">
+      <UAlert
+        variant="soft"
+        color="primary"
+        description="You don't have a member assigned in this group."
+        :actions="[
+          {
+            click() {
+              showGroupShare = true;
+            },
+            variant: 'solid',
+            label: 'Assign Member',
+          },
+        ]"
+      />
+    </div>
     <YourBalances :groupID="groupID" />
     <div class="w-full flex text-center gap-2">
       <div class="flex-grow">
