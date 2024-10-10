@@ -164,6 +164,14 @@ export const initGroupDb = async (id: string) => {
   return groupDBs[id];
 };
 
+export const setGroupCurrency = async (id: string, currency: string) => {
+  const groupDB = await initGroupDb(id);
+  await groupDB.exec(
+    "INSERT OR REPLACE INTO kv (id, value) VALUES ('currency', ?)",
+    [currency],
+  );
+};
+
 export const setGroupName = async (id: string, name: string) => {
   const groupDB = await initGroupDb(id);
   await groupDB.exec(
@@ -172,10 +180,11 @@ export const setGroupName = async (id: string, name: string) => {
   );
 };
 
-export const createGroup = async (name: string) => {
+export const createGroup = async (name: string, currency: string) => {
   const id = nanoid();
   const groupDB = await createEmptyGroup(id);
   await setGroupName(id, name);
+  await setGroupCurrency(id, currency);
   const siteID = await getSiteID(groupDB);
   await groupDB.exec(
     "INSERT INTO members (id, name, site_id) VALUES (?, ?, ?)",
@@ -206,9 +215,7 @@ export const getGroup = async (id: string) => {
   const groupDB = groupDBs[id];
   if (!groupDB) return null;
   const mySiteID = await getSiteID(groupDB);
-  const [{ value: name } = { value: "" }] = await groupDB.execO(
-    "SELECT value FROM kv WHERE id = 'name'",
-  );
+  const kv = await groupDB.execO("SELECT id, value FROM kv");
   const transactionsList = await groupDB.execO(
     "SELECT id, description, created_at, updated_at, type, split_type, data FROM transactions ORDER BY created_at ASC",
   );
@@ -243,15 +250,21 @@ export const getGroup = async (id: string) => {
       name: member.name,
     };
   });
-  return {
+  const group = {
     id,
     myID,
     mySiteID,
-    name: name || "Unnamed Group",
+    name: "Unnamed Group",
     transactions,
     transactionOrder,
     members,
   };
+  for (const obj of kv) {
+    if (obj.value) {
+      group[obj.id] = obj.value;
+    }
+  }
+  return group;
 };
 
 export const getGroups = async (): Promise<

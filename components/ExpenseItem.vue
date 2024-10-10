@@ -14,7 +14,8 @@
         <span
           v-for="[payer, val] in Object.entries(expense.payers)"
           class="text-sm font-light"
-          >{{ useGroups().getMemberName(groupID, payer) }} paid ${{ val }}</span
+          >{{ useGroups().getMemberName(groupID, payer) }} paid
+          {{ useGroups().getGroupCurrency(groupID) }}{{ val }}</span
         >
       </div>
       <div v-else>
@@ -27,13 +28,14 @@
             true,
           )
         }}
-        ${{ Object.values(expense.payers)[0] }}
+        {{ useGroups().getGroupCurrency(groupID)
+        }}{{ Object.values(expense.payers)[0] }}
         <span class="text-sm text-primary-600/80 dark:text-primary-300/80"
           >&middot; {{ moment(expense.created_at).format("MMM DD") }}</span
         >
       </div>
       <span :class="['text-xl', getColorForValue(value)]"
-        >${{ Math.abs(value) }}</span
+        >{{ useGroups().getGroupCurrency(groupID) }}{{ Math.abs(value) }}</span
       >
     </div>
   </div>

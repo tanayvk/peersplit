@@ -12,7 +12,8 @@
               'text-2xl',
               balance > 0 ? 'color-positive' : 'color-negative',
             ]"
-            >${{ Math.abs(balance) }}</span
+            >{{ useGroups().getGroupCurrency(groupID)
+            }}{{ Math.abs(balance) }}</span
           ></span
         >
         <div>
@@ -27,7 +28,8 @@
                 'text-md',
                 balance > 0 ? 'color-positive' : 'color-negative',
               ]"
-              >${{ payment.value }}</span
+              >{{ useGroups().getGroupCurrency(groupID)
+              }}{{ payment.value }}</span
             ></span
           >
         </div>

@@ -5,6 +5,6 @@ export const setName = (name) => {
   localStorage.setItem("peersplit.name", name);
   for (const group of Object.values(useGroups().groups)) {
     const member = group.members[group.myID];
-    useGroups().updateMember(group.id, { ...member, name });
+    if (member) useGroups().updateMember(group.id, { ...member, name });
   }
 };

@@ -14,10 +14,10 @@
       }}</span>
       <div>
         <UButton
-          disabled
           icon="i-heroicons-chart-bar"
           variant="ghost"
           color="gray"
+          @click="showStats = true"
         />
         <UButton
           @click="showGroupShare = true"
@@ -81,6 +81,11 @@
       @delete="requestDel"
     />
   </UModal>
+  <UModal v-model="showStats">
+    <ClientOnly>
+      <Stats @close="showStats = false" />
+    </ClientOnly>
+  </UModal>
   <UModal v-model="showGroupShare">
     <GroupShare @close="showGroupShare = false" />
   </UModal>
@@ -114,6 +119,7 @@
 const showExpenseEditor = ref(false),
   showPaymentEditor = ref(false),
   showGroupShare = ref(false),
+  showStats = ref(false),
   showDeleteConfirmation = ref(false),
   ugly = ref({ hello: "" }),
   expense = ref(null),

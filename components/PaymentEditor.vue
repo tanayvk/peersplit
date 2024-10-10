@@ -53,7 +53,7 @@
         >
         <UButton
           v-if="expenseItem"
-          @click="$emit('delete', expense)"
+          @click="$emit('delete', expenseItem)"
           variant="ghost"
           color="rose"
           >Delete</UButton

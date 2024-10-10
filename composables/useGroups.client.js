@@ -302,6 +302,9 @@ export const useGroups = defineStore("groups", {
           : group.members[memberID]?.name;
       };
     },
+    getGroupCurrency(state) {
+      return (id) => state.groups[id]?.currency || "$";
+    },
   },
 });
 // TODO: can we make stuff slightly more performant
