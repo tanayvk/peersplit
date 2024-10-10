@@ -29,28 +29,27 @@ export const initGun = async () => {
   }
 };
 
-export const createUser = (alias, pass) =>
+export const createGroupUser = (groupID) =>
   new Promise((res) => {
-    let d = 0;
-    function done() {
-      d++;
-      if (d === 2) {
-        res();
-      }
-    }
     let mygun = newGun();
-    mygun.user().create(alias, pass, done);
-    mygun.on("auth", () => {
-      done();
+    let u = mygun.user();
+    u.create(groupID, groupID, () => {
+      u.auth(groupID, groupID, ({ err }) => {
+        if (err) {
+          rej(err);
+        }
+      });
+      mygun.on("auth", () => {
+        groupGuns[groupID] = [u];
+        res(groupGuns[groupID]);
+      });
     });
   });
-
-export const createGroupUser = (group) => {};
 
 export const authUser = (alias, pass) =>
   new Promise((res, rej) => {
     let mygun = newGun();
-    let user = mygun.user().recall();
+    let user = mygun.user();
     user.auth(alias, pass, ({ err }) => {
       if (err) {
         rej(err);
@@ -69,15 +68,18 @@ export const updateStart = (groupID, peer, start) =>
 
 const listening = {};
 
+const groupGuns = {};
 const getGroupGun = async (groupID) => {
   // TODO: use group secret
-  return await authUser(groupID, groupID);
+  if (groupGuns[groupID]) return groupGuns[groupID];
+  return (groupGuns[groupID] = await authUser(groupID, groupID));
 };
 
 export async function listenGroup(group) {
   const [g] = await findGroupAsync(group.id, 5);
   const mySite = group.mySiteID;
   if (mySite) g.get("peers").set(mySite);
+  window.g = g;
   g.get("peers")
     .map()
     .on((peer) => {

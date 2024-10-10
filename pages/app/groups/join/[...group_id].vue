@@ -33,8 +33,9 @@ onMounted(async () => {
   cancel.value = c;
   await promise;
   await createEmptyGroup(groupID);
-  updateGroup(groupID);
-  listenGroup(useGroups());
+  await updateGroup(groupID);
+  listenGroup(useGroups().getGroupByID(groupID));
+  navigateTo(`/app/groups/group/${groupID}`);
 });
 onBeforeUnmount(() => {
   if (cancel.value) cancel.value.value = true;

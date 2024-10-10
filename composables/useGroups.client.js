@@ -243,6 +243,7 @@ export const useGroups = defineStore("groups", {
       }
       this.updateMember(groupID, {
         ...group.members[id],
+        name: useName().value,
         siteID: group.mySiteID,
       });
     },
@@ -312,5 +313,7 @@ export const updateGroups = async () => {
 };
 
 export const updateGroup = async (id) => {
-  useGroups().setGroup(await getGroup(id));
+  const group = await getGroup(id);
+  useGroups().setGroup(group);
+  return group;
 };

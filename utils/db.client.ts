@@ -181,9 +181,11 @@ export const createGroup = async (name: string) => {
     "INSERT INTO members (id, name, site_id) VALUES (?, ?, ?)",
     [nanoid(), useName().value, siteID],
   );
-  await updateGroup(id);
-  await createUser(id, id);
-  listenGroup(id);
+  const group = await updateGroup(id);
+  await createGroupUser(id);
+  listenGroup(group).then(() => {
+    pushChanges(group);
+  });
   return id;
 };
 
