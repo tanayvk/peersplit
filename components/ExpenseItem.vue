@@ -3,7 +3,7 @@
     @click="$emit('edit')"
     class="px-3 py-2 flex gap-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
   >
-    <div class="flex-grow flex justify-between items-center">
+    <div class="flex-grow flex justify-between items-center gap-2">
       <div v-if="expense.type === 'expense'" class="flex flex-col">
         <div class="gap-1 flex items-center pb-1">
           <span>{{ expense.description }}</span>

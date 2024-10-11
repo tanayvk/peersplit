@@ -14,22 +14,19 @@
     <div class="space-y-2">
       <div>
         <span class="font-medium">Spending</span>
-        <canvas id="spending-chart" :height="members.length * 60"></canvas>
+        <canvas id="spending-chart" :height="graphHeight"></canvas>
       </div>
       <div>
         <span class="font-medium">Shares</span>
-        <canvas id="shares-chart" :height="members.length * 60"></canvas>
+        <canvas id="shares-chart" :height="graphHeight"></canvas>
       </div>
       <div>
         <span class="font-medium">Payments Made</span>
-        <canvas id="payments-made-chart" :height="members.length * 60"></canvas>
+        <canvas id="payments-made-chart" :height="graphHeight"></canvas>
       </div>
       <div>
         <span class="font-medium">Payments Received</span>
-        <canvas
-          id="payments-received-chart"
-          :height="members.length * 60"
-        ></canvas>
+        <canvas id="payments-received-chart" :height="graphHeight"></canvas>
       </div>
     </div>
   </UCard>
@@ -48,6 +45,8 @@ const groupID = useRoute().params.group_id;
 const members = computed(() =>
   Object.keys(useGroups().getGroupByID(groupID).members || {}),
 );
+
+const graphHeight = computed(() => (members.value.length + 1) * 40);
 
 const graphOptions = () => ({
   indexAxis: "y",

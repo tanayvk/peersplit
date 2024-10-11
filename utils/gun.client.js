@@ -99,9 +99,8 @@ async function listenPeer(g, group, peer) {
   let current = getStart(group.id, peer);
   while (true) {
     const next = await waitForNext(g, current);
-    await applyChanges(group, g, next);
+    await applyChanges(group, g, next, peer);
     current = next;
-    updateStart(group.id, peer, current);
   }
 }
 
@@ -132,10 +131,35 @@ const putObj = (g, key, obj) =>
     g.get("data").get(key).put(obj, res);
   });
 
-async function applyChanges(group, g, key) {
+const groupChanges = {};
+const groupApplyChangesTimeouts = {};
+const groupChangeListeners = {};
+
+async function applyChanges(group, g, key, peer) {
+  const groupID = group.id;
   const obj = await getObj(g, key);
   if (obj.changes) {
-    await applyChangesForGroup(group.id, JSON.parse(obj.changes));
+    groupChanges[groupID] ||= [];
+    groupChanges[groupID].push([JSON.parse(obj.changes), peer, key]);
+    if (groupApplyChangesTimeouts[groupID])
+      clearTimeout(groupApplyChangesTimeouts[groupID]);
+    groupApplyChangesTimeouts[groupID] = setTimeout(async () => {
+      const changes = [],
+        updates = [];
+      for (const [change, peer, key] of groupChanges[groupID] || []) {
+        changes.push(change);
+        updates.push([peer, key]);
+      }
+      groupChanges[groupID] = [];
+      await applyChangesForGroup(group.id, changes.flat());
+      for (const [peer, key] of updates) updateStart(group.id, peer, key);
+      if (groupChangeListeners[groupID]) {
+        for (const f of groupChangeListeners[groupID]) {
+          f?.();
+        }
+        groupChangeListeners[groupID] = [];
+      }
+    }, 1000);
   }
 }
 
@@ -171,7 +195,7 @@ const findGroupAsync = async (
       return await getGroupGun(groupID);
     } catch {
       retries++;
-      await new Promise((res) => setTimeout(res, 2000));
+      await new Promise((res) => setTimeout(res, 1000));
     }
   }
 };
@@ -179,4 +203,9 @@ const findGroupAsync = async (
 export const findGroup = (groupID) => {
   let cancel = { value: false };
   return [cancel, findGroupAsync(groupID, undefined, cancel)];
+};
+
+export const groupOnApply = (groupID, onApply) => {
+  groupChangeListeners[groupID] ||= [];
+  groupChangeListeners[groupID].push(onApply);
 };

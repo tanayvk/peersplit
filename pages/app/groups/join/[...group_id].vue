@@ -17,12 +17,14 @@
         square
       />
     </div>
-    <SpinLoader height="h-full" />
+    <SpinLoader :text="text" height="h-full" />
   </div>
 </template>
 
 <script setup>
 const groupID = useRoute().params.group_id?.[0];
+const text = ref("Finding group..."),
+  found = ref(false);
 const cancel = ref(null);
 onMounted(async () => {
   if (await getGroup(groupID)) {
@@ -30,12 +32,22 @@ onMounted(async () => {
     return;
   }
   const [c, promise] = findGroup(groupID);
+  setTimeout(() => {
+    if (!found.value) {
+      text.value =
+        "This is taking longer than expected.\nPlease ask one of your group members to open PeerSplit.";
+    }
+  }, 3000);
   cancel.value = c;
   await promise;
+  found.value = true;
+  text.value = "Fetching group data...";
   await createEmptyGroup(groupID);
   await updateGroup(groupID);
+  groupOnApply(groupID, () => {
+    navigateTo(`/app/groups/group/${groupID}`);
+  });
   listenGroup(useGroups().getGroupByID(groupID));
-  navigateTo(`/app/groups/group/${groupID}`);
 });
 onBeforeUnmount(() => {
   if (cancel.value) cancel.value.value = true;
