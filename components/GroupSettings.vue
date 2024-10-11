@@ -3,7 +3,7 @@
     <template #header>
       <div class="flex justify-between items-center">
         <span class="font-medium"
-          >Group Settings - {{ useGroups().getGroupByID(groupID).name }}</span
+          >{{ useGroups().getGroupByID(groupID).name }} - Settings</span
         >
         <UButton
           @click="$emit('close')"
@@ -14,20 +14,24 @@
       </div>
     </template>
     <div class="space-y-4">
-      <div class="space-y-2">
-        <UFormGroup label="Group Name">
-          <UInput @blur="updateName" placeholder="New Group" v-model="name" />
-        </UFormGroup>
-        <UFormGroup label="Currency Symbol">
-          <UInput
-            @blur="updateCurrency"
-            placeholder="ex: $ or ₹"
-            v-model="currency"
-          />
-        </UFormGroup>
-      </div>
       <UTabs color="primary" :items="tabs">
         <template #item="{ item }">
+          <div v-if="item.label === 'General'" class="space-y-2">
+            <UFormGroup label="Group Name">
+              <UInput
+                @blur="updateName"
+                placeholder="New Group"
+                v-model="name"
+              />
+            </UFormGroup>
+            <UFormGroup label="Currency Symbol">
+              <UInput
+                @blur="updateCurrency"
+                placeholder="ex: $ or ₹"
+                v-model="currency"
+              />
+            </UFormGroup>
+          </div>
           <GroupSettingsMembers v-if="item.label === 'Members'" />
           <GroupSettingsBalances v-if="item.label === 'Balances'" />
         </template>
@@ -39,7 +43,8 @@
 <script setup>
 const groupID = useRoute().params.group_id;
 const tabs = [
-  { label: "Members", icon: "i-heroicons-users" },
+  { label: "General", icon: "i-heroicons-user-circle" },
+  { label: "Members", icon: "i-heroicons-user-group" },
   { label: "Balances", icon: "i-heroicons-document-currency-dollar" },
 ];
 const name = ref(useGroups().getGroupByID(groupID)?.name),
