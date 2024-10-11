@@ -117,7 +117,6 @@ async function create() {
   currency.value = "";
 }
 async function joinGroup() {
-  console.log("navigate", invitePath.value);
   navigateTo(invitePath.value);
   inviteLink.value = "";
   showJoinGroup.value = false;

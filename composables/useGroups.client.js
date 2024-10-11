@@ -1,30 +1,6 @@
 import moment from "moment";
 import { defineStore } from "pinia";
 
-// group
-// {
-//   id
-//   name
-//   transactionOrder
-//   transactions
-//   myID
-//   members
-// }
-//
-// transaction
-// {
-//   id
-//   description
-//   created_at
-//   updated_at
-//   payers
-//   splitters
-//   splits // computed
-//   type
-//   splitType
-//   totalCost // computed
-// }
-
 export const round = (val) =>
   Math.round((Number(val) + Number.EPSILON) * 100) / 100;
 
@@ -147,6 +123,18 @@ export const useGroups = defineStore("groups", {
     setGroup(group) {
       this.groups ||= {};
       this.groups[group.id] = group;
+    },
+    async setGroupName(groupID, name) {
+      const group = this.groups[groupID];
+      group.name = name;
+      await setGroupName(groupID, name);
+      pushChanges(group);
+    },
+    async setGroupCurrency(groupID, currency) {
+      const group = this.groups[groupID];
+      group.currency = currency;
+      await setGroupCurrency(groupID, currency);
+      pushChanges(group);
     },
     async addTransaction(groupID, transaction) {
       const group = this.groups[groupID];

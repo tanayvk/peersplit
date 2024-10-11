@@ -20,8 +20,8 @@
           @click="showStats = true"
         />
         <UButton
-          @click="showGroupShare = true"
-          icon="i-heroicons-user-plus"
+          @click="showGroupSettings = true"
+          icon="i-heroicons-cog-6-tooth"
           variant="ghost"
           color="gray"
         />
@@ -35,7 +35,7 @@
         :actions="[
           {
             click() {
-              showGroupShare = true;
+              showGroupSettings = true;
             },
             variant: 'solid',
             label: 'Assign Member',
@@ -86,8 +86,8 @@
       <Stats @close="showStats = false" />
     </ClientOnly>
   </UModal>
-  <UModal v-model="showGroupShare">
-    <GroupShare @close="showGroupShare = false" />
+  <UModal v-model="showGroupSettings">
+    <GroupSettings @close="showGroupSettings = false" />
   </UModal>
   <UModal v-model="showDeleteConfirmation">
     <UCard>
@@ -118,7 +118,7 @@
 <script setup>
 const showExpenseEditor = ref(false),
   showPaymentEditor = ref(false),
-  showGroupShare = ref(false),
+  showGroupSettings = ref(false),
   showStats = ref(false),
   showDeleteConfirmation = ref(false),
   ugly = ref({ hello: "" }),
