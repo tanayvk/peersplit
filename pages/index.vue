@@ -2,7 +2,8 @@
   <div class="min-h-screen flex flex-col">
     <div class="mx-auto container max-w-[800px] px-8 pb-6 flex-grow space-y-6">
       <div class="text-center space-y-6 my-8">
-        <div class="space-y-2">
+        <div class="gap-2 flex flex-col items-center justify-center">
+          <Icon class="w-20 h-20" filled :fontControlled="false" />
           <h1 class="text-6xl select-none">
             <span class="text-primary">Peer</span
             ><span class="text-lime-300">Split</span>
@@ -11,7 +12,7 @@
         </div>
         <div class="flex flex-row gap-2 items-center justify-center">
           <div>
-            <UButton to="/app" size="xl">Try PeerSplit</UButton>
+            <UButton to="/app" size="xl">Get Started</UButton>
           </div>
           <div>
             <UButton
@@ -23,24 +24,17 @@
           </div>
         </div>
       </div>
-      <UAlert
-        variant="subtle"
-        color="rose"
-        icon="i-heroicons-exclamation-triangle"
-        title="Under Development!"
-        description="PeerSplit is still in development and isn't stable yet."
-      />
       <div class="text-xl space-y-4">
         <p>
-          PeerSplit is a <span class="font-semibold">free</span> app to help you
-          split and track expenses with ease.
+          <span class="text-primary font-medium">PeerSplit</span> is a
+          <span class="font-semibold">free</span> app to help you split and
+          track group expenses with ease.
         </p>
         <p>
           It's a peer-to-peer app, ensuring your data remains
           <span class="font-semibold">completely private</span>—nothing is
           stored on the cloud.
         </p>
-        <p>The app is still being developed.</p>
         <p>
           For feedback or ideas, reach out to me
           <UButton class="p-0 text-xl" to="https://x.com/tanayvk" variant="link"
@@ -95,6 +89,7 @@
 </template>
 
 <script setup>
+import Icon from "~/assets/logo.svg";
 definePageMeta({
   colorMode: "dark",
 });

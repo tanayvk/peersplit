@@ -15,12 +15,69 @@ const moduleExclude = (match) => {
 export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   // devtools: { enabled: true },
-  modules: ["@nuxt/ui", "@nuxt/fonts", "nuxt-gtag", "@pinia/nuxt"],
+  modules: [
+    "@nuxt/ui",
+    "@nuxt/fonts",
+    "nuxt-gtag",
+    "@pinia/nuxt",
+    "@vite-pwa/nuxt",
+    "nuxt-svgo"
+  ],
   fonts: {
     families: [{ name: "Fredoka", provider: "google" }],
   },
   gtag: {
     id: "G-VH3Y7P4PLH",
+  },
+  pwa: {
+    strategies: "generateSW",
+    registerWebManifestInRouteRules: true,
+    registerType: "autoUpdate",
+    manifest: {
+      name: "PeerSplit | Split your expenses",
+      short_name: "PeerSplit",
+      theme_color: "#89a1f0",
+      icons: [
+        {
+          src: "pwa-64x64.png",
+          sizes: "64x64",
+          type: "image/png",
+        },
+        {
+          src: "pwa-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "pwa-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+        },
+        {
+          src: "maskable-icon-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
+        },
+      ],
+    },
+    workbox: {
+      cleanupOutdatedCaches: true,
+      globPatterns: ["/", "**/*.{mjs,js,css,html,png,svg,ico}"],
+    },
+    injectManifest: {
+      globPatterns: ["/", "**/*.{mjs,js,css,html,png,svg,ico}"],
+    },
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: true,
+      suppressWarnings: true,
+      navigateFallback: "/",
+      navigateFallbackAllowlist: [/^\/$/],
+      type: "module",
+    },
   },
   vite: {
     optimizeDeps: {
