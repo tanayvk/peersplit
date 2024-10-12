@@ -1,11 +1,10 @@
 import Gun from "gun/gun";
-import SEA from "gun/sea.js";
+import "gun/sea.js";
 import "gun/lib/radix";
 import "gun/lib/radisk";
 import "gun/lib/store";
 import "gun/lib/rindexed";
 import "gun/lib/webrtc";
-import { nanoid } from "nanoid";
 
 const newGun = () =>
   Gun({
@@ -57,8 +56,6 @@ export const authUser = (alias, pass) =>
     });
   });
 
-const listening = {};
-
 const groupGuns = {};
 const getGroupGun = async (groupID) => {
   // TODO: use group secret
@@ -68,24 +65,18 @@ const getGroupGun = async (groupID) => {
 
 export async function listenGroup(group) {
   const [g] = await findGroupAsync(group.id, 5);
-  g.get("changes").on(
-    async (data) => {
-      console.log("dat", data._);
-      await Promise.all(
-        Object.entries(data).map(async ([key, val]) => {
-          if (key === "_") return;
-          const id = `${group.id}.${key}`;
-          console.log("rec", id, group.mySiteID);
-          if (!id.includes(group.mySiteID) && !(await checkChange(id))) {
-            console.log("applying id", id);
-            applyChanges(group, JSON.parse(val));
-            insertChange(id);
-          }
-        }),
-      );
-    },
-    { change: true },
-  );
+  g.get("changes")
+    .map()
+    .on(
+      async (data, key) => {
+        const id = `${group.id}.${key}`;
+        if (!id.includes(group.mySiteID) && !(await checkChange(id))) {
+          applyChanges(group, JSON.parse(data));
+          insertChange(id);
+        }
+      },
+      { change: true },
+    );
 }
 
 const setObj = (g, key, obj) =>
@@ -137,11 +128,7 @@ export async function pushChanges(group) {
   const current = (await getObj(g.get("count"), peer)) || -1;
   const [changes, maxChange] = await getGroupChanges(groupID, Number(current));
   if (changes.length > 0) {
-    await putObj(
-      g.get("changes"),
-      `${peer}.${nanoid()}`,
-      JSON.stringify(changes),
-    );
+    await setObj(g, "changes", JSON.stringify(changes));
     await putObj(g.get("count"), peer, maxChange);
   }
 }
