@@ -37,7 +37,7 @@ onMounted(async () => {
       text.value =
         "This is taking longer than expected.\nPlease ask one of your group members to open PeerSplit.";
     }
-  }, 3000);
+  }, 5000);
   cancel.value = c;
   await promise;
   found.value = true;

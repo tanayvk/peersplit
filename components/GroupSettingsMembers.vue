@@ -42,7 +42,7 @@
           <UButton
             variant="link"
             class="p-0"
-            v-if="(!myID || assigning) && !member.siteID"
+            v-if="!myID || assigning"
             @click="assign(member.id)"
             >That's me!</UButton
           >

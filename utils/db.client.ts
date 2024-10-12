@@ -90,6 +90,11 @@ const migrations = [
       columns: "active INT DEFAULT TRUE",
     });
   },
+  async function second() {
+    await db.exec(
+      `CREATE TABLE IF NOT EXISTS change_keys (id PRIMARY KEY NOT NULL)`,
+    );
+  },
 ];
 
 const groupMigrations = [
@@ -126,6 +131,7 @@ const runMigrations = async (groupDB: any = db) => {
 };
 
 export const clean = async () => {
+  localStorage.clear();
   const databases = await indexedDB.databases();
   for (const database of databases) {
     indexedDB.deleteDatabase(database.name as string);
@@ -321,7 +327,6 @@ export const getGroupChanges = async (groupID: string, index: number) => {
     [index, siteID],
   );
   return [
-    siteID,
     changes.map((c) => {
       return c.map((cc) => {
         if (cc && typeof cc === "object") {
@@ -332,4 +337,17 @@ export const getGroupChanges = async (groupID: string, index: number) => {
     }),
     changes.reduce((a, b) => Math.max(a, b[5]), -1),
   ];
+};
+
+export const checkChange = async (id: string) => {
+  const db = await getDB();
+  const [change] = await db.execO("SELECT * FROM change_keys WHERE id = ?", [
+    id,
+  ]);
+  return !!change;
+};
+
+export const insertChange = async (id: string) => {
+  const db = await getDB();
+  await db.exec("INSERT INTO change_keys (id) VALUES (?)", [id]);
 };

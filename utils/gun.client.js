@@ -7,8 +7,6 @@ import "gun/lib/rindexed";
 import "gun/lib/webrtc";
 import { nanoid } from "nanoid";
 
-let gun;
-
 const newGun = () =>
   Gun({
     peers: ["https://gun-manhattan.herokuapp.com/gun"],
@@ -16,7 +14,6 @@ const newGun = () =>
   });
 
 export const initGun = async () => {
-  gun = newGun();
   const groups = await getGroups();
   for (const group of Object.values(groups)) {
     try {
@@ -60,12 +57,6 @@ export const authUser = (alias, pass) =>
     });
   });
 
-export const getStart = (groupID, peer) =>
-  localStorage.getItem(`${groupID}.${peer}`) || "-1";
-
-export const updateStart = (groupID, peer, start) =>
-  localStorage.setItem(`${groupID}.${peer}`, start);
-
 const listening = {};
 
 const groupGuns = {};
@@ -77,107 +68,81 @@ const getGroupGun = async (groupID) => {
 
 export async function listenGroup(group) {
   const [g] = await findGroupAsync(group.id, 5);
-  const mySite = group.mySiteID;
-  if (mySite) g.get("peers").set(mySite);
-  window.g = g;
-  g.get("peers")
-    .map()
-    .on((peer) => {
-      if (
-        typeof peer === "string" &&
-        peer !== mySite &&
-        !listening[group.id]?.[peer]
-      ) {
-        listening[group.id] ||= {};
-        listening[group.id][peer] = true;
-        listenPeer(g.get(peer), group, peer);
-      }
-    });
+  g.get("changes").on(
+    async (data) => {
+      console.log("dat", data._);
+      await Promise.all(
+        Object.entries(data).map(async ([key, val]) => {
+          if (key === "_") return;
+          const id = `${group.id}.${key}`;
+          console.log("rec", id, group.mySiteID);
+          if (!id.includes(group.mySiteID) && !(await checkChange(id))) {
+            console.log("applying id", id);
+            applyChanges(group, JSON.parse(val));
+            insertChange(id);
+          }
+        }),
+      );
+    },
+    { change: true },
+  );
 }
 
-async function listenPeer(g, group, peer) {
-  let current = getStart(group.id, peer);
-  while (true) {
-    const next = await waitForNext(g, current);
-    await applyChanges(group, g, next, peer);
-    current = next;
-  }
-}
-
-const waitForNext = (g, key) =>
+const setObj = (g, key, obj) =>
   new Promise((res) => {
-    g.get("data")
-      .get(key)
-      .on((value, _key, _msg, ev) => {
-        if (value.next) {
-          res(value.next);
-          ev.off();
-        }
-      });
-  });
-
-const getObj = (g, key) =>
-  new Promise((res) => {
-    g.get("data")
-      .get(key)
-      .on((v, _k, _m, ev) => {
-        if (v) res(v);
-        ev.off();
-      });
+    g.get(key).set(obj, res);
   });
 
 const putObj = (g, key, obj) =>
   new Promise((res) => {
-    g.get("data").get(key).put(obj, res);
+    g.get(key).put(obj, res);
+  });
+
+const getObj = (g, key) =>
+  new Promise((res) => {
+    g.get(key).once((v) => {
+      res(v);
+    });
   });
 
 const groupChanges = {};
 const groupApplyChangesTimeouts = {};
 const groupChangeListeners = {};
 
-async function applyChanges(group, g, key, peer) {
+async function applyChanges(group, changes) {
   const groupID = group.id;
-  const obj = await getObj(g, key);
-  if (obj.changes) {
-    groupChanges[groupID] ||= [];
-    groupChanges[groupID].push([JSON.parse(obj.changes), peer, key]);
-    if (groupApplyChangesTimeouts[groupID])
-      clearTimeout(groupApplyChangesTimeouts[groupID]);
-    groupApplyChangesTimeouts[groupID] = setTimeout(async () => {
-      const changes = [],
-        updates = [];
-      for (const [change, peer, key] of groupChanges[groupID] || []) {
-        changes.push(change);
-        updates.push([peer, key]);
+  groupChanges[groupID] ||= [];
+  groupChanges[groupID].push(changes);
+  if (groupApplyChangesTimeouts[groupID])
+    clearTimeout(groupApplyChangesTimeouts[groupID]);
+  groupApplyChangesTimeouts[groupID] = setTimeout(async () => {
+    const changes = groupChanges[groupID].flat();
+    groupChanges[groupID] = [];
+    await applyChangesForGroup(group.id, changes);
+    if (groupChangeListeners[groupID]) {
+      for (const f of groupChangeListeners[groupID]) {
+        f?.();
       }
-      groupChanges[groupID] = [];
-      await applyChangesForGroup(group.id, changes.flat());
-      for (const [peer, key] of updates) updateStart(group.id, peer, key);
-      if (groupChangeListeners[groupID]) {
-        for (const f of groupChangeListeners[groupID]) {
-          f?.();
-        }
-        groupChangeListeners[groupID] = [];
-      }
-    }, 1000);
-  }
+      groupChangeListeners[groupID] = [];
+    }
+  }, 1000);
 }
 
 export async function pushChanges(group) {
   // TODO: wait for gun init?
   const groupID = group.id;
+  const peer = group.mySiteID;
   const [g] = await findGroupAsync(groupID, 5);
   if (!g) return;
-  const current = getStart(groupID, group.mySiteID);
-  const [peer, changes, maxChange] = await getGroupChanges(
-    groupID,
-    Number(current),
-  );
+  const current = (await getObj(g.get("count"), peer)) || -1;
+  const [changes, maxChange] = await getGroupChanges(groupID, Number(current));
   if (changes.length > 0) {
-    const newID = maxChange.toString();
-    await putObj(g.get(peer), newID, { changes: JSON.stringify(changes) });
-    await putObj(g.get(peer), current, { next: newID });
-    updateStart(groupID, peer, newID);
+    await putObj(
+      g.get("changes"),
+      `${peer}.${nanoid()}`,
+      JSON.stringify(changes),
+    );
+    await putObj(g.get("count"), peer, maxChange);
   }
 }
 
@@ -195,7 +160,7 @@ const findGroupAsync = async (
       return await getGroupGun(groupID);
     } catch {
       retries++;
-      await new Promise((res) => setTimeout(res, 1000));
+      await new Promise((res) => setTimeout(res, 300));
     }
   }
 };
