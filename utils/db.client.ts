@@ -116,6 +116,13 @@ const groupMigrations = [
       columns: "type, description, split_type, data, created_by, updated_by",
     });
   },
+  async function second(groupDB: any) {
+    await createTable({
+      db: groupDB,
+      tableName: "activity",
+      columns: "data, by",
+    });
+  },
 ];
 
 const runMigrations = async (groupDB: any = db) => {
@@ -170,20 +177,73 @@ export const initGroupDb = async (id: string) => {
   return groupDBs[id];
 };
 
-export const setGroupCurrency = async (id: string, currency: string) => {
-  const groupDB = await initGroupDb(id);
-  await groupDB.exec(
-    "INSERT OR REPLACE INTO kv (id, value) VALUES ('currency', ?)",
-    [currency],
-  );
+export const getActivity = async (tx, id) => {
+  const [activity] = await tx.execO("SELECT * FROM activity WHERE id = ?", [
+    id,
+  ]);
+  if (activity.data) {
+    try {
+      activity.data = JSON.parse(activity.data);
+    } catch {}
+  }
+  return activity;
 };
 
-export const setGroupName = async (id: string, name: string) => {
+export const setGroupCurrency = async (
+  id: string,
+  currency: string,
+  by?: string,
+) => {
   const groupDB = await initGroupDb(id);
-  await groupDB.exec(
-    "INSERT OR REPLACE INTO kv (id, value) VALUES ('name', ?)",
-    [name],
-  );
+  let activity;
+  await groupDB.tx(async (tx: any) => {
+    const [{ value } = { value: "" }] = await tx.execO(
+      "SELECT value FROM kv WHERE id = ?",
+      ["currency"],
+    );
+    await tx.exec(
+      "INSERT OR REPLACE INTO kv (id, value) VALUES ('currency', ?)",
+      [currency],
+    );
+    const activityID = nanoid();
+    await tx.exec("INSERT INTO activity (id, data, by) VALUES (?, ?, ?)", [
+      activityID,
+      JSON.stringify({
+        type: "update_currency",
+        prev: value,
+        cur: currency,
+      }),
+      by || "",
+    ]);
+    activity = await getActivity(tx, activityID);
+  });
+  return activity;
+};
+
+export const setGroupName = async (id: string, name: string, by?: string) => {
+  const groupDB = await initGroupDb(id);
+  let activity;
+  await groupDB.tx(async (tx: any) => {
+    const [{ value } = { value: "" }] = await tx.execO(
+      "SELECT value FROM kv WHERE id = ?",
+      ["name"],
+    );
+    await tx.exec("INSERT OR REPLACE INTO kv (id, value) VALUES ('name', ?)", [
+      name,
+    ]);
+    const activityID = nanoid();
+    await tx.exec("INSERT INTO activity (id, data, by) VALUES (?, ?, ?)", [
+      activityID,
+      JSON.stringify({
+        type: "update_name",
+        prev: value,
+        cur: name,
+      }),
+      by || "",
+    ]);
+    activity = await getActivity(tx, activityID);
+  });
+  return activity;
 };
 
 export const createGroup = async (name: string, currency: string) => {
@@ -223,8 +283,16 @@ export const getGroup = async (id: string) => {
   const mySiteID = await getSiteID(groupDB);
   const kv = await groupDB.execO("SELECT id, value FROM kv");
   const transactionsList = await groupDB.execO(
-    "SELECT id, description, created_at, updated_at, type, split_type, data FROM transactions ORDER BY created_at ASC",
+    "SELECT * FROM transactions ORDER BY created_at ASC",
   );
+  const activityList = await groupDB.execO(
+    "SELECT * FROM activity ORDER BY created_at ASC",
+  );
+  activityList.forEach((activity) => {
+    try {
+      activity.data = JSON.parse(activity.data);
+    } catch {}
+  });
   const transactions = {};
   transactionsList.forEach((transaction) => {
     const { payers, splitters } = JSON.parse(transaction.data);
@@ -263,6 +331,7 @@ export const getGroup = async (id: string) => {
     name: "Unnamed Group",
     transactions,
     transactionOrder,
+    activityList,
     members,
   };
   for (const obj of kv) {

@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 const { getGroupByID, getPaymentsByGroupID } = storeToRefs(useGroups());
 const myID = computed(() => {
   const { myID } = getGroupByID.value(groupID);

@@ -116,6 +116,6 @@ const remaining = computed(() => {
   return total - split.value;
 });
 const adding = ref(false);
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 const members = computed(() => useGroups().getMembersList(groupID));
 </script>

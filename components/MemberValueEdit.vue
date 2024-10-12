@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 const model = defineModel();
 const { addLabel, members, noValues } = defineProps([
   "addLabel",

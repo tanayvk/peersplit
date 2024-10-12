@@ -30,6 +30,6 @@
 const { group } = defineProps(["group"]);
 const balance = computed(() => groupGetMyBalance(group));
 async function go(id) {
-  navigateTo(`/app/groups/group/${id}`);
+  navigateToGroup(id);
 }
 </script>

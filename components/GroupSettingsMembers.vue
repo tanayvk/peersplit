@@ -42,7 +42,7 @@
           <UButton
             variant="link"
             class="p-0"
-            v-if="!myID || assigning"
+            v-if="(!myID || assigning) && myID !== member.id"
             @click="assign(member.id)"
             >That's me!</UButton
           >
@@ -79,7 +79,7 @@
 
 <script setup>
 import { nanoid } from "nanoid";
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 const assigning = ref(false);
 const members = computed(() => useGroups().getMembersList(groupID));
 const myID = computed(() => {

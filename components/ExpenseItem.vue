@@ -43,7 +43,7 @@
 
 <script setup>
 import moment from "moment";
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 const { expense } = defineProps(["expense"]);
 const myID = computed(() => {
   const { myID } = useGroups().getGroupByID(groupID);

@@ -1,41 +1,43 @@
 <template>
-  <UCard
-    ><div class="flex flex-col gap-1">
-      <span v-if="balance === 0" class="flex items-center gap-2"
-        >You are settled up in this group.</span
-      >
-      <div v-else>
-        <span class="flex items-center gap-2"
-          >You {{ balance > 0 ? "are owed" : "owe" }}
-          <span
-            :class="[
-              'text-2xl',
-              balance > 0 ? 'color-positive' : 'color-negative',
-            ]"
-            >{{ useGroups().getGroupCurrency(groupID)
-            }}{{ Math.abs(balance) }}</span
-          ></span
+  <div class="px-1">
+    <UCard
+      ><div class="flex flex-col gap-1">
+        <span v-if="balance === 0" class="flex items-center gap-2"
+          >You are settled up in this group.</span
         >
-        <div>
-          <span
-            v-for="payment in payments"
-            class="flex items-center gap-1 text-sm"
-            >- {{ useGroups().getMemberName(groupID, payment.from) }}
-            {{ payment.from === myID ? "owe" : "owes" }}
-            {{ useGroups().getMemberName(groupID, payment.to, true) }}
+        <div v-else>
+          <span class="flex items-center gap-2"
+            >You {{ balance > 0 ? "are owed" : "owe" }}
             <span
               :class="[
-                'text-md',
+                'text-2xl',
                 balance > 0 ? 'color-positive' : 'color-negative',
               ]"
               >{{ useGroups().getGroupCurrency(groupID)
-              }}{{ payment.value }}</span
+              }}{{ Math.abs(balance) }}</span
             ></span
           >
+          <div>
+            <span
+              v-for="payment in payments"
+              class="flex items-center gap-1 text-sm"
+              >- {{ useGroups().getMemberName(groupID, payment.from) }}
+              {{ payment.from === myID ? "owe" : "owes" }}
+              {{ useGroups().getMemberName(groupID, payment.to, true) }}
+              <span
+                :class="[
+                  'text-md',
+                  balance > 0 ? 'color-positive' : 'color-negative',
+                ]"
+                >{{ useGroups().getGroupCurrency(groupID)
+                }}{{ payment.value }}</span
+              ></span
+            >
+          </div>
         </div>
-      </div>
-    </div></UCard
-  >
+      </div></UCard
+    >
+  </div>
 </template>
 
 <script setup>

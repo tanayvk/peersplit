@@ -70,8 +70,10 @@ export async function listenGroup(group) {
     .on(
       async (data, key) => {
         const id = `${group.id}.${key}`;
-        if (!id.includes(group.mySiteID) && !(await checkChange(id))) {
-          applyChanges(group, JSON.parse(data));
+        const match = data.match(/(^\((.*)\))?([\S\s]*)/);
+        const [peer, json] = [match[2], match[3]];
+        if (peer !== group.mySiteID && !(await checkChange(id))) {
+          applyChanges(group, JSON.parse(json));
           insertChange(id);
         }
       },
@@ -116,7 +118,7 @@ async function applyChanges(group, changes) {
       }
       groupChangeListeners[groupID] = [];
     }
-  }, 1000);
+  }, 500);
 }
 
 export async function pushChanges(group) {
@@ -128,7 +130,7 @@ export async function pushChanges(group) {
   const current = (await getObj(g.get("count"), peer)) || -1;
   const [changes, maxChange] = await getGroupChanges(groupID, Number(current));
   if (changes.length > 0) {
-    await setObj(g, "changes", JSON.stringify(changes));
+    await setObj(g, "changes", `(${peer})` + JSON.stringify(changes));
     await putObj(g.get("count"), peer, maxChange);
   }
 }

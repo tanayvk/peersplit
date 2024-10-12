@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 const tabs = [
   { label: "General", icon: "i-heroicons-user-circle" },
   { label: "Members", icon: "i-heroicons-user-group" },

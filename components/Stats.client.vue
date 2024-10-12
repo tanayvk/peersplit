@@ -40,7 +40,7 @@ Chart.register(autocolors);
 const lighten = (color, value) =>
   helpers.color(color).lighten(value).rgbString();
 
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 
 const members = computed(() =>
   Object.keys(useGroups().getGroupByID(groupID).members || {}),

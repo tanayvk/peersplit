@@ -28,7 +28,7 @@ const text = ref("Finding group..."),
 const cancel = ref(null);
 onMounted(async () => {
   if (await getGroup(groupID)) {
-    navigateTo(`/app/groups/group/${groupID}`);
+    navigateToGroup(groupID);
     return;
   }
   const [c, promise] = findGroup(groupID);
@@ -45,7 +45,7 @@ onMounted(async () => {
   await createEmptyGroup(groupID);
   await updateGroup(groupID);
   groupOnApply(groupID, () => {
-    navigateTo(`/app/groups/group/${groupID}`);
+    navigateToGroup(groupID);
   });
   listenGroup(useGroups().getGroupByID(groupID));
 });

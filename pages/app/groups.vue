@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="useRoute().name === 'app-groups'"
+    v-if="useRoute().name === 'app-groups' && !useGroups().currentGroup"
     class="flex flex-col h-full px-3 pt-5 space-y-4"
   >
     <div class="flex w-full gap-1">
@@ -86,6 +86,7 @@
       </UCard>
     </UModal>
   </div>
+  <Group v-else-if="useGroups().currentGroup" />
   <NuxtPage v-else />
 </template>
 

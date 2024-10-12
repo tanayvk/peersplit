@@ -73,7 +73,7 @@ const adding = ref(false),
 const model = defineModel({ default: { hello: "" } });
 model.value.hello = Object.values(expenseItem?.payers || {})?.[0] || "";
 
-const groupID = useRoute().params.group_id;
+const groupID = useGroupID();
 const members = computed(() => useGroups().getMembersList(groupID));
 
 function fixValue(member) {

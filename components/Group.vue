@@ -1,9 +1,9 @@
 <template>
   <SpinLoader height="h-full" v-if="loading" />
   <div v-if="!loading && group" class="flex flex-col gap-2 h-full px-2">
-    <div class="h-12 flex justify-between items-center gap-2">
+    <div class="h-14 flex justify-between items-center gap-2">
       <UButton
-        to="/app/groups"
+        @click="navigateToGroup(null)"
         icon="i-heroicons-arrow-left"
         variant="ghost"
         color="gray"
@@ -27,7 +27,7 @@
         />
       </div>
     </div>
-    <div class="py-1 overflow-y-scroll">
+    <div class="py-1 space-y-2 overflow-y-scroll">
       <div v-if="group && !group.myID">
         <UAlert
           variant="soft"
@@ -131,7 +131,7 @@ const { getGroupByID, loading, getGroupedTransactionsByGroupID } = storeToRefs(
   useGroups(),
 );
 
-const groupID = useGroupID();
+const groupID = useGroups().currentGroup;
 const group = computed(() => getGroupByID.value(groupID));
 
 watch(loading, () => {

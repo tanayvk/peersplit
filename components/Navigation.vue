@@ -30,15 +30,14 @@ const items = [
   //   icon: "i-heroicons-currency-dollar",
   // },
   {
-    disabled: true,
     label: "Activity",
     icon: "i-heroicons-clipboard-document-list",
   },
-  {
-    disabled: true,
-    label: "Sync",
-    icon: "i-heroicons-arrow-path",
-  },
+  // {
+  //   disabled: true,
+  //   label: "Sync",
+  //   icon: "i-heroicons-arrow-path",
+  // },
   {
     label: "Settings",
     icon: "i-heroicons-cog",

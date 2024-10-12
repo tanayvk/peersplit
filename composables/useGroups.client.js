@@ -1,4 +1,5 @@
 import moment from "moment";
+import { nanoid } from "nanoid";
 import { defineStore } from "pinia";
 
 export const round = (val) =>
@@ -114,8 +115,16 @@ export const useGroups = defineStore("groups", {
   state: () => ({
     loading: true,
     groups: {},
+    currentGroup: null,
+    currentTransaction: null,
   }),
   actions: {
+    setCurrentGroup(id) {
+      this.currentGroup = id;
+    },
+    setCurrentTransaction(id) {
+      this.currentTransaction = id;
+    },
     setGroups(groups) {
       this.groups = groups;
       this.loading = false;
@@ -127,13 +136,15 @@ export const useGroups = defineStore("groups", {
     async setGroupName(groupID, name) {
       const group = this.groups[groupID];
       group.name = name;
-      await setGroupName(groupID, name);
+      const activity = await setGroupName(groupID, name, group.myID);
+      this.addActivity(groupID, activity);
       pushChanges(group);
     },
     async setGroupCurrency(groupID, currency) {
       const group = this.groups[groupID];
       group.currency = currency;
-      await setGroupCurrency(groupID, currency);
+      const activity = await setGroupCurrency(groupID, currency, group.myID);
+      this.addActivity(groupID, activity);
       pushChanges(group);
     },
     async addTransaction(groupID, transaction) {
@@ -141,38 +152,67 @@ export const useGroups = defineStore("groups", {
       group.transactions[transaction.id] = transaction;
       group.transactionOrder.push(transaction.id);
       const groupDB = await getGroupDB(groupID);
-      await groupDB.exec(
-        `INSERT INTO transactions (id, type, description, split_type, data) VALUES (?, ?, ?, ?, ?)`,
-        [
-          transaction.id,
-          transaction.type,
-          transaction.description,
-          transaction.splitType,
+      await groupDB.tx(async (tx) => {
+        await tx.exec(
+          `INSERT INTO transactions (id, type, description, split_type, data) VALUES (?, ?, ?, ?, ?)`,
+          [
+            transaction.id,
+            transaction.type,
+            transaction.description,
+            transaction.splitType,
+            JSON.stringify({
+              payers: transaction.payers,
+              splitters: transaction.splitters,
+            }),
+          ],
+        );
+        const activityID = nanoid();
+        await tx.exec("INSERT INTO activity (id, data, by) VALUES (?, ?, ?)", [
+          activityID,
           JSON.stringify({
-            payers: transaction.payers,
-            splitters: transaction.splitters,
+            type: "create_transaction",
+            cur: transaction,
           }),
-        ],
-      );
+          group.myID || "",
+        ]);
+        this.addActivity(groupID, await getActivity(tx, activityID));
+      });
       pushChanges(group);
     },
     async updateTransaction(groupID, transaction) {
       const group = this.groups[groupID];
       group.transactions[transaction.id] = transaction;
       const groupDB = await getGroupDB(groupID);
-      await groupDB.exec(
-        `UPDATE transactions SET type = ?, description = ?, split_type = ?, data = ? WHERE id = ?`,
-        [
-          transaction.type,
-          transaction.description,
-          transaction.splitType,
+      await groupDB.tx(async (tx) => {
+        const [prevTransaction] = await tx.execO(
+          "SELECT * FROM transactions WHERE id = ?",
+          [transaction.id],
+        );
+        await tx.exec(
+          `UPDATE transactions SET type = ?, description = ?, split_type = ?, data = ? WHERE id = ?`,
+          [
+            transaction.type,
+            transaction.description,
+            transaction.splitType,
+            JSON.stringify({
+              payers: transaction.payers,
+              splitters: transaction.splitters,
+            }),
+            transaction.id,
+          ],
+        );
+        const activityID = nanoid();
+        await tx.exec("INSERT INTO activity (id, data, by) VALUES (?, ?, ?)", [
+          activityID,
           JSON.stringify({
-            payers: transaction.payers,
-            splitters: transaction.splitters,
+            type: "update_transaction",
+            prev: prevTransaction,
+            cur: transaction,
           }),
-          transaction.id,
-        ],
-      );
+          group.myID || "",
+        ]);
+        this.addActivity(groupID, await getActivity(tx, activityID));
+      });
       pushChanges(group);
     },
     async deleteTransaction(groupID, transactionID) {
@@ -182,9 +222,23 @@ export const useGroups = defineStore("groups", {
         (id) => id !== transactionID,
       );
       const groupDB = await getGroupDB(groupID);
-      await groupDB.exec(`DELETE FROM transactions WHERE id = ?`, [
-        transactionID,
-      ]);
+      await groupDB.tx(async (tx) => {
+        const [prevTransaction] = await tx.execO(
+          "SELECT * FROM transactions WHERE id = ?",
+          [transactionID],
+        );
+        await tx.exec(`DELETE FROM transactions WHERE id = ?`, [transactionID]);
+        const activityID = nanoid();
+        await tx.exec("INSERT INTO activity (id, data, by) VALUES (?, ?, ?)", [
+          activityID,
+          JSON.stringify({
+            type: "delete_transaction",
+            prev: prevTransaction,
+          }),
+          group.myID || "",
+        ]);
+        this.addActivity(groupID, await getActivity(tx, activityID));
+      });
       pushChanges(group);
     },
     async addMember(groupID, member) {
@@ -234,6 +288,11 @@ export const useGroups = defineStore("groups", {
         name: useName().value,
         siteID: group.mySiteID,
       });
+    },
+    async addActivity(groupID, activity) {
+      const group = this.groups[groupID];
+      group.activityList ||= [];
+      group.activityList.push(activity);
     },
   },
   getters: {
@@ -293,6 +352,21 @@ export const useGroups = defineStore("groups", {
     getGroupCurrency(state) {
       return (id) => state.groups[id]?.currency || "$";
     },
+    getAllActivity(state) {
+      const activity = [];
+      for (const group of Object.values(state.groups)) {
+        activity.push(
+          group.activityList.map((a) => ({
+            ...a,
+            groupID: group.id,
+            myID: group.myID,
+          })),
+        );
+      }
+      const activityFlat = activity.flat();
+      activityFlat.sort((a, b) => b.created_at.localeCompare(a.created_at));
+      return activityFlat;
+    },
   },
 });
 // TODO: can we make stuff slightly more performant
@@ -308,3 +382,5 @@ export const updateGroup = async (id) => {
   useGroups().setGroup(group);
   return group;
 };
+
+export const useGroupID = () => useGroups().currentGroup;
