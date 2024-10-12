@@ -137,7 +137,17 @@ const runMigrations = async (groupDB: any = db) => {
   }
 };
 
-export const clean = async () => {
+export const wipeData = async () => {
+  if (db) {
+    try {
+      await db.close();
+    } catch {}
+  }
+  for (const groupDB of Object.values(groupDBs)) {
+    try {
+      await groupDB.close();
+    } catch {}
+  }
   localStorage.clear();
   const databases = await indexedDB.databases();
   for (const database of databases) {
@@ -146,7 +156,7 @@ export const clean = async () => {
 };
 
 export const dbInit = async () => {
-  // await clean();
+  // await wipeData();
   sqlite = await initWasm(() => wasmUrl);
   db = await sqlite.open("peersplit-main");
   await runMigrations();
@@ -247,7 +257,7 @@ export const setGroupName = async (id: string, name: string, by?: string) => {
 };
 
 export const createGroup = async (name: string, currency: string) => {
-  const id = nanoid();
+  const id = nanoid(32);
   const groupDB = await createEmptyGroup(id);
   await setGroupName(id, name);
   await setGroupCurrency(id, currency);

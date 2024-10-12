@@ -25,12 +25,18 @@ export const initGun = async () => {
   }
 };
 
+const getCredsFromGroupID = (groupID) => {
+  const length = groupID.length;
+  return [groupID.slice(0, length / 2), groupID.slice(length / 2)];
+};
+
 export const createGroupUser = (groupID) =>
   new Promise((res) => {
     let mygun = newGun();
     let u = mygun.user();
-    u.create(groupID, groupID, () => {
-      u.auth(groupID, groupID, ({ err }) => {
+    const [alias, pass] = getCredsFromGroupID(groupID);
+    u.create(alias, pass, () => {
+      u.auth(alias, pass, ({ err }) => {
         if (err) {
           rej(err);
         }
@@ -60,7 +66,8 @@ const groupGuns = {};
 const getGroupGun = async (groupID) => {
   // TODO: use group secret
   if (groupGuns[groupID]) return groupGuns[groupID];
-  return (groupGuns[groupID] = await authUser(groupID, groupID));
+  const [alias, pass] = getCredsFromGroupID(groupID);
+  return (groupGuns[groupID] = await authUser(alias, pass));
 };
 
 export async function listenGroup(group) {

@@ -1,10 +1,22 @@
 <template>
   <div class="px-4 py-2 flex flex-col h-full">
-    <div class="space-y-2 flex-grow">
+    <div class="space-y-3 flex-grow">
       <SettingsName />
       <UFormGroup label="Color Mode">
         <DarkModeSwitch />
       </UFormGroup>
+      <UAccordion :items="[{ label: 'Danger Zone', color: 'red' }]">
+        <template #item>
+          <UFormGroup label="Clear All Data">
+            <UButton
+              @click="confirmClear = true"
+              label="Clear All Data"
+              color="red"
+              block
+            />
+          </UFormGroup>
+        </template>
+      </UAccordion>
     </div>
     <div class="text-center w-full py-4">
       <div class="flex gap-1 justify-center items-center">
@@ -33,4 +45,48 @@
       </div>
     </div>
   </div>
+  <UModal v-model="confirmClear">
+    <UCard>
+      <template #header>
+        <div class="flex justify-between items-center">
+          <span class="font-medium">Permanently Delete All Data</span>
+          <UButton
+            @click="confirmClear = false"
+            variant="ghost"
+            color="gray"
+            icon="i-heroicons-x-mark"
+          />
+        </div>
+      </template>
+      <div class="space-y-3">
+        <UAlert
+          description="This will erase all your groups and transactions. This action cannot be undone."
+          color="red"
+          variant="subtle"
+          icon="i-heroicons-exclamation-triangle"
+        />
+        <div class="flex gap-2">
+          <UButton
+            @click="del"
+            color="rose"
+            variant="outline"
+            :loading="clearing"
+            >Yes, delete everything</UButton
+          >
+          <UButton @click="confirmClear = false" variant="ghost"
+            >Cancel</UButton
+          >
+        </div>
+      </div>
+    </UCard>
+  </UModal>
 </template>
+<script setup>
+const confirmClear = ref(false),
+  clearing = ref(false);
+async function del() {
+  clearing.value = true;
+  await wipeData();
+  window.location.reload();
+}
+</script>
