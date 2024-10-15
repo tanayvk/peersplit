@@ -34,11 +34,6 @@
 
 <script setup>
 import Chart from "chart.js/auto";
-import * as helpers from "chart.js/helpers";
-import autocolors from "chartjs-plugin-autocolors";
-Chart.register(autocolors);
-const lighten = (color, value) =>
-  helpers.color(color).lighten(value).rgbString();
 
 const groupID = useGroupID();
 
@@ -56,24 +51,46 @@ const graphOptions = () => ({
     },
   },
   responsive: true,
+  scales: {
+    x: {
+      border: {
+        display: false,
+      },
+      grid: {
+        display: false,
+        drawOnChartArea: false,
+      },
+    },
+    y: {
+      grid: {},
+    },
+  },
   plugins: {
     legend: { display: false },
     tooltip: {
       enabled: false,
     },
-    autocolors: {
-      mode: "data",
-      customize(context) {
-        const colors = context.colors;
-        return {
-          background: lighten(colors.background, 0.5),
-          border: lighten(colors.border, 0.5),
-        };
-      },
-      offset: 5,
-    },
   },
 });
+
+const colors = [
+  { background: "rgba(255, 99, 132, 0.2)", border: "rgb(255, 99, 132)" },
+  { background: "rgba(255, 159, 64, 0.2)", border: "rgb(255, 159, 64)" },
+  { background: "rgba(255, 205, 86, 0.2)", border: "rgb(255, 205, 86)" },
+  { background: "rgba(75, 192, 192, 0.2)", border: "rgb(75, 192, 192)" },
+  { background: "rgba(54, 162, 235, 0.2)", border: "rgb(54, 162, 235)" },
+  { background: "rgba(153, 102, 255, 0.2)", border: "rgb(153, 102, 255)" },
+  { background: "rgba(201, 203, 207, 0.2)", border: "rgb(201, 203, 207)" },
+];
+
+const memberColors = {};
+let colorIndex = 0;
+const getMemberColor = (member) => {
+  if (memberColors[member]) return memberColors[member];
+  colorIndex++;
+  colorIndex %= colors.length;
+  return (memberColors[member] = colors[colorIndex]);
+};
 
 const getData = (data) => {
   const rows = [
@@ -82,6 +99,7 @@ const getData = (data) => {
       val: Object.values(data).reduce((a, b) => round(a + b), 0),
     },
     ...Object.entries(data).map(([member, val]) => ({
+      id: member,
       member: useGroups().getMemberName(groupID, member),
       val,
     })),
@@ -91,11 +109,14 @@ const getData = (data) => {
       rows.push({ member: useGroups().getMemberName(groupID, member), val: 0 });
     }
   }
+  const colors = rows.map((row) => getMemberColor(row.id));
   return {
     labels: rows.map((row) => [row.member, row.val]),
     datasets: [
       {
         data: rows.map((row) => row.val),
+        backgroundColor: colors.map((color) => color.background),
+        borderColor: colors.map((color) => color.border),
       },
     ],
   };
