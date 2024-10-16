@@ -37,7 +37,15 @@
     <UModal v-model="showJoinGroup">
       <UCard>
         <template #header>
-          <span class="font-medium">Join Group</span>
+          <div class="flex justify-between items-center">
+            <span class="font-medium">Join Group</span>
+            <UButton
+              @click="showJoinGroup = false"
+              variant="ghost"
+              color="gray"
+              icon="i-heroicons-x-mark"
+            />
+          </div>
         </template>
         <UFormGroup label="Invite Link">
           <UInput
@@ -60,7 +68,15 @@
     <UModal v-model="showCreateGroupModal">
       <UCard>
         <template #header>
-          <span class="font-medium">Create Group</span>
+          <div class="flex justify-between items-center">
+            <span class="font-medium">Create Group</span>
+            <UButton
+              @click="showCreateGroupModal = false"
+              variant="ghost"
+              color="gray"
+              icon="i-heroicons-x-mark"
+            />
+          </div>
         </template>
         <div class="space-y-2">
           <UFormGroup label="Group Name">
