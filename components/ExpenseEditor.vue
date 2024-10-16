@@ -45,6 +45,12 @@
           ><span class="font-normal color-negative" v-if="remaining !== 0">
             &middot; {{ remaining }} remaining</span
           >
+          <span
+            class="font-normal color-neutral"
+            v-if="expense.splitType === 4"
+          >
+            &middot; {{ split }} total shares</span
+          >
         </template>
         <MemberValueEdit
           v-model="expense.splitters"
@@ -53,11 +59,14 @@
           :noValues="expense.splitType === 1"
         />
       </UFormGroup>
+      <UFormGroup>
+        <UCheckbox v-model="saveAsDefaultSplit" label="Save as default split" />
+      </UFormGroup>
     </div>
     <template #footer>
       <div class="flex gap-2">
         <UButton
-          @click="$emit(expenseItem ? 'update' : 'add', expense)"
+          @click="onSubmit"
           :loading="adding"
           variant="outline"
           :disabled="
@@ -84,20 +93,49 @@
 <script setup>
 import { nanoid } from "nanoid";
 
+const emit = defineEmits(["update", "add"]);
+
+const groupID = useGroupID();
+
+const getDefaultSplit = () => {
+  const json = localStorage.getItem(`peersplit.${groupID}.defaultSplit`);
+  if (json) {
+    return JSON.parse(json);
+  }
+  return { splitters: {}, splitType: 1 };
+};
+
+const onSubmit = () => {
+  if (saveAsDefaultSplit.value) {
+    localStorage.setItem(
+      `peersplit.${groupID}.defaultSplit`,
+      JSON.stringify({
+        splitters: expense.value.splitters,
+        splitType: expense.value.splitType,
+      }),
+    );
+  }
+  emit(expenseItem ? "update" : "add", expense.value);
+};
+
+const getDefaultExpense = () => {
+  const e = {
+    id: nanoid(),
+    type: "expense",
+    description: "",
+    created_at: new Date(),
+    ...getDefaultSplit(),
+  };
+  const myID = useGroups().getGroupByID(groupID)?.myID;
+  e.payers = myID ? { [myID]: "" } : {};
+  return e;
+};
+
 const { expenseItem } = defineProps(["expenseItem"]);
 const expense = ref(
-  expenseItem
-    ? JSON.parse(JSON.stringify(expenseItem))
-    : {
-        id: nanoid(),
-        type: "expense",
-        description: "",
-        splitType: 1,
-        payers: {},
-        splitters: {},
-        created_at: new Date(),
-      },
+  expenseItem ? JSON.parse(JSON.stringify(expenseItem)) : getDefaultExpense(),
 );
+const saveAsDefaultSplit = ref(false);
 const paid = computed(() =>
   Object.values(expense.value.payers).reduce(
     (a, b) => Number(a) + Number(b),
@@ -116,6 +154,5 @@ const remaining = computed(() => {
   return total - split.value;
 });
 const adding = ref(false);
-const groupID = useGroupID();
 const members = computed(() => useGroups().getMembersList(groupID));
 </script>

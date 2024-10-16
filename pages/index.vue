@@ -268,6 +268,11 @@ const devlog = [
     text: "The app is live and stable! Turned it into a PWA. Ready for everyone to start using it.",
     link: "https://x.com/tanayvk/status/1845138111749292519",
   },
+  {
+    date: "Oct 16, 2024",
+    text: "Added default splits for groups and improved stats.",
+    link: "https://x.com/tanayvk/status/1846498652770218347",
+  },
 ].reverse();
 
 const features = [
