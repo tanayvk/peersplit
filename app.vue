@@ -7,6 +7,6 @@ useSeoMeta({
 });
 </script>
 <template>
-  <!-- <NuxtPwaManifest /> -->
+  <NuxtPwaManifest />
   <NuxtPage />
 </template>
