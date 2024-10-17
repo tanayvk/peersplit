@@ -77,11 +77,15 @@ export async function listenGroup(group) {
     .on(
       async (data, key) => {
         const id = `${group.id}.${key}`;
-        const match = data.match(/(^\((.*)\))?([\S\s]*)/);
+        const match = data.match(/(^\(([^\(\)]*)\))?([\S\s]*)/);
         const [peer, json] = [match[2], match[3]];
         if (peer !== group.mySiteID && !(await checkChange(id))) {
-          applyChanges(group, JSON.parse(json));
-          insertChange(id);
+          try {
+            applyChanges(group, JSON.parse(json));
+            insertChange(id);
+          } catch (err) {
+            console.log("err", err);
+          }
         }
       },
       { change: true },
@@ -128,6 +132,16 @@ async function applyChanges(group, changes) {
   }, 500);
 }
 
+const getBatches = (changes, maxLen) => {
+  let i = 0;
+  const batches = [];
+  while (i < changes.length) {
+    batches.push(changes.slice(i, i + maxLen));
+    i += maxLen;
+  }
+  return batches;
+};
+
 export async function pushChanges(group) {
   // TODO: wait for gun init?
   const groupID = group.id;
@@ -137,7 +151,10 @@ export async function pushChanges(group) {
   const current = (await getObj(g.get("count"), peer)) || -1;
   const [changes, maxChange] = await getGroupChanges(groupID, Number(current));
   if (changes.length > 0) {
-    await setObj(g, "changes", `(${peer})` + JSON.stringify(changes));
+    const batches = getBatches(changes, 500);
+    for (const batch of batches) {
+      await setObj(g, "changes", `(${peer})` + JSON.stringify(batch));
+    }
     await putObj(g.get("count"), peer, maxChange);
   }
 }

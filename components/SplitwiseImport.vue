@@ -120,7 +120,6 @@ const confirmImport = async () => {
       transactions.value,
     );
   } catch (err) {
-    console.log("err", err);
     error.value = true;
   }
   importing.value = false;

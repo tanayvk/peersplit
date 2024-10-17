@@ -162,8 +162,7 @@ export const dbInit = async () => {
   db = await sqlite.open("peersplit-main");
   await runMigrations();
   resolves.forEach((res) => res(db));
-  const activeGroups = await db.execO("SELECT * FROM groups WHERE active = 1");
-  console.log("what", activeGroups);
+  const activeGroups = await db.execO("SELECT id FROM groups WHERE active = 1");
   for (const group of activeGroups) {
     await initGroupDb(group.id);
   }
@@ -466,7 +465,6 @@ export const importSplitwise = async (groupID, myID, members, transactions) => {
           .map((v) => Number(v))
           .filter((v) => v !== 0).length === 2; // only two people involved
       const createdAt = moment(date).utc().format("YYYY-MM-DD HH:mm:ss");
-      console.log("createdAt", createdAt);
       await tx.exec(
         `INSERT INTO transactions (id, type, description, split_type, data, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
         [
@@ -493,4 +491,5 @@ export const importSplitwise = async (groupID, myID, members, transactions) => {
     ]);
   });
   await updateGroup(groupID);
+  await pushChanges(useGroups().getGroupByID(groupID));
 };
