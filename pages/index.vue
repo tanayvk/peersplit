@@ -273,6 +273,11 @@ const devlog = [
     text: "Added default splits for groups and improved stats.",
     link: "https://x.com/tanayvk/status/1846498652770218347",
   },
+  {
+    date: "Oct 17, 2024",
+    text: "Added Splitwise import and CSV export functionality.",
+    link: "https://x.com/tanayvk/status/1846787787812753444",
+  },
 ].reverse();
 
 const features = [
@@ -284,5 +289,6 @@ const features = [
   },
   { text: "- Smooth UX that stays out of your way" },
   { text: "- Available in dark and light modes" },
+  { text: "- Import from Splitwise, export to CSV" },
 ];
 </script>
