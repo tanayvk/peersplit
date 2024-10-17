@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import moment from "moment";
 import initWasm from "@vlcn.io/crsqlite-wasm";
 import wasmUrl from "@vlcn.io/crsqlite-wasm/crsqlite.wasm?url";
 
@@ -161,7 +162,8 @@ export const dbInit = async () => {
   db = await sqlite.open("peersplit-main");
   await runMigrations();
   resolves.forEach((res) => res(db));
-  const activeGroups = await db.execO("SELECT id FROM groups WHERE active = 1");
+  const activeGroups = await db.execO("SELECT * FROM groups WHERE active = 1");
+  console.log("what", activeGroups);
   for (const group of activeGroups) {
     await initGroupDb(group.id);
   }
@@ -325,6 +327,7 @@ export const getGroup = async (id: string) => {
   );
   const members: Record<string, any> = {};
   membersList.forEach((member: any) => {
+    // TODO: support multiple sites per user
     if (member.site_id === mySiteID) {
       myID = member.id;
     }
@@ -429,4 +432,65 @@ export const checkChange = async (id: string) => {
 export const insertChange = async (id: string) => {
   const db = await getDB();
   await db.exec("INSERT INTO change_keys (id) VALUES (?)", [id]);
+};
+
+export const importSplitwise = async (groupID, myID, members, transactions) => {
+  const db = await getGroupDB(groupID);
+  const membersIDs = [];
+  await db.tx(async (tx: any) => {
+    for (const member of members) {
+      const m = { id: nanoid(), name: member };
+      membersIDs.push(m.id);
+      await tx.exec(`INSERT INTO members (id, name) VALUES (?, ?)`, [
+        m.id,
+        m.name,
+      ]);
+    }
+    for (const transaction of transactions) {
+      const payers = {};
+      const splitters = {};
+      transaction.slice(5).forEach((v, index) => {
+        const val = Number(v);
+        if (val > 0) {
+          payers[membersIDs[index]] = round(val);
+        }
+        if (val < 0) {
+          splitters[membersIDs[index]] = round(-val);
+        }
+      });
+      const [date, description] = transaction;
+      const isPayment =
+        description.includes("paid") &&
+        transaction
+          .slice(5)
+          .map((v) => Number(v))
+          .filter((v) => v !== 0).length === 2; // only two people involved
+      const createdAt = moment(date).utc().format("YYYY-MM-DD HH:mm:ss");
+      console.log("createdAt", createdAt);
+      await tx.exec(
+        `INSERT INTO transactions (id, type, description, split_type, data, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          nanoid(),
+          isPayment ? "payment" : "expense",
+          description,
+          2, // split by amount
+          JSON.stringify({
+            payers,
+            splitters,
+          }),
+          createdAt,
+        ],
+      );
+    }
+    await tx.exec("INSERT INTO activity (id, data, by) VALUES (?, ?, ?)", [
+      nanoid(),
+      JSON.stringify({
+        type: "import_splitwise",
+        members: members.length,
+        transactions: transactions.length,
+      }),
+      myID || "",
+    ]);
+  });
+  await updateGroup(groupID);
 };

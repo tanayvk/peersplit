@@ -8,7 +8,8 @@
         <div class="gap-1 flex items-center pb-1">
           <span>{{ expense.description }}</span>
           <span class="text-sm text-primary-600/80 dark:text-primary-300/80"
-            >&middot; {{ moment(expense.created_at).format("MMM DD") }}</span
+            >&middot;
+            {{ moment.utc(expense.created_at).format("MMM DD") }}</span
           >
         </div>
         <span
@@ -31,7 +32,7 @@
         {{ useGroups().getGroupCurrency(groupID)
         }}{{ Object.values(expense.payers)[0] }}
         <span class="text-sm text-primary-600/80 dark:text-primary-300/80"
-          >&middot; {{ moment(expense.created_at).format("MMM DD") }}</span
+          >&middot; {{ moment.utc(expense.created_at).format("MMM DD") }}</span
         >
       </div>
       <span :class="['text-xl', getColorForValue(value)]"

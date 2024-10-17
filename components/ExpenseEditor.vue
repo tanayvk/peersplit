@@ -138,20 +138,20 @@ const expense = ref(
 const saveAsDefaultSplit = ref(false);
 const paid = computed(() =>
   Object.values(expense.value.payers).reduce(
-    (a, b) => Number(a) + Number(b),
+    (a, b) => round(Number(a) + Number(b)),
     0,
   ),
 );
 const split = computed(() =>
   Object.values(expense.value.splitters).reduce(
-    (a, b) => Number(a) + Number(b),
+    (a, b) => round(Number(a) + Number(b)),
     0,
   ),
 );
 const remaining = computed(() => {
   if (expense.value.splitType === 4 || expense.value.splitType === 1) return 0; // shares or split equally
   const total = expense.value.splitType === 2 ? paid.value : 100;
-  return total - split.value;
+  return round(total - split.value);
 });
 const adding = ref(false);
 const members = computed(() => useGroups().getMembersList(groupID));

@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     "nuxt-gtag",
     "@pinia/nuxt",
     "@vite-pwa/nuxt",
-    "nuxt-svgo"
+    "nuxt-svgo",
   ],
   fonts: {
     families: [{ name: "Fredoka", provider: "google" }],

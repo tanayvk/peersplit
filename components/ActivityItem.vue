@@ -99,6 +99,15 @@
       >.
     </span>
 
+    <!-- Splitwise Import -->
+    <span v-if="item.data.type === 'import_splitwise'">
+      imported <span class="font-medium">{{ item.data.members }}</span> members
+      and
+      <span class="font-medium">{{ item.data.transactions }}</span> transactions
+      from Splitwise in <span class="font-medium">{{ groupName }}</span
+      >.
+    </span>
+
     <!-- Timestamp -->
     <div class="text-sm text-gray-600/50 dark:text-gray-300/50">
       {{ moment.utc(item.created_at).fromNow() }}

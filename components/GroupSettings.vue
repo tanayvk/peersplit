@@ -31,6 +31,8 @@
                 v-model="currency"
               />
             </UFormGroup>
+            <SplitwiseImport />
+            <CsvExport />
           </div>
           <GroupSettingsMembers v-if="item.label === 'Members'" />
           <GroupSettingsBalances v-if="item.label === 'Balances'" />
