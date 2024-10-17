@@ -16,11 +16,15 @@
       </div>
       <div v-if="balance > 0" class="flex flex-col items-end">
         <span class="text-xs">You are owed</span>
-        <span class="text-xl color-positive">${{ balance }}</span>
+        <span class="text-xl color-positive"
+          >{{ useGroups().getGroupCurrency(group.id) }}{{ balance }}</span
+        >
       </div>
       <div v-if="balance < 0" class="flex flex-col items-end">
         <span class="text-xs">You owe</span>
-        <span class="text-xl color-negative">${{ -balance }}</span>
+        <span class="text-xl color-negative"
+          >{{ useGroups().getGroupCurrency(group.id) }}{{ -balance }}</span
+        >
       </div>
     </div>
   </UCard>
