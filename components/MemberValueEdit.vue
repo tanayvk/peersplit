@@ -33,12 +33,15 @@
         class="w-full"
         :ui="{ width: 'w-[--width]' }"
         :items="[
-          availableMembers.map((member) => ({
-            label: member.name,
-            click: () => {
-              model[member.id] = '';
-            },
-          })),
+          availableMembers.map((member) => {
+            console.log('asdf', member.name);
+            return {
+              label: member.name,
+              click: () => {
+                model[member.id] = '';
+              },
+            };
+          }),
         ]"
         :popper="{ placement: 'bottom-start' }"
       >
@@ -69,13 +72,17 @@ const availableMembers = computed(() =>
 const dropdownWidth = ref(0);
 const cssVars = computed(() => ({ "--width": `${dropdownWidth.value}px` }));
 const button = ref(null);
-onMounted(() => {
+watch(availableMembers, () => {
+  fixWidth();
+});
+onMounted(fixWidth);
+function fixWidth() {
   nextTick(() => {
-    if (button.value) {
+    if (button.value?.$el?.offsetWidth) {
       dropdownWidth.value = button.value.$el.offsetWidth;
     }
   });
-});
+}
 function fixValue(member) {
   nextTick(() => {
     const fixed = model.value[member].match(/\d+(\.\d?\d?)?/)?.[0] || "";
