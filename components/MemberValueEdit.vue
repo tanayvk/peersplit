@@ -34,7 +34,6 @@
         :ui="{ width: 'w-[--width]' }"
         :items="[
           availableMembers.map((member) => {
-            console.log('asdf', member.name);
             return {
               label: member.name,
               click: () => {
