@@ -21,6 +21,23 @@
         </div>
       </div>
 
+      <UAlert
+        icon="i-heroicons-rocket-launch"
+        color="primary"
+        variant="subtle"
+        title="Exciting News!"
+        description="I'm launching PeerSplit on Product Hunt next Tuesday! I'd really appreciate your support—click below to check it out."
+        :actions="[
+          {
+            label: 'Visit Launch',
+            target: '_blank',
+            to: 'https://www.producthunt.com/posts/peersplit',
+            variant: 'solid',
+            color: 'emerald',
+          },
+        ]"
+      />
+
       <div class="text-xl space-y-4">
         <p>
           <span class="text-primary font-medium">PeerSplit</span> is a
