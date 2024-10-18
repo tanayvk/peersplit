@@ -26,7 +26,7 @@
         color="primary"
         variant="subtle"
         title="Exciting News!"
-        description="I'm launching PeerSplit on Product Hunt next Tuesday! I'd really appreciate your support—click below to check it out."
+        description="I'm launching PeerSplit on Product Hunt next Tuesday (Oct 22)! I'd really appreciate your support—click below to check it out."
         :actions="[
           {
             label: 'Visit Launch',
