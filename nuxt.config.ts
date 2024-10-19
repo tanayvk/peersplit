@@ -18,16 +18,12 @@ export default defineNuxtConfig({
   modules: [
     "@nuxt/ui",
     "@nuxt/fonts",
-    "nuxt-gtag",
     "@pinia/nuxt",
     "@vite-pwa/nuxt",
     "nuxt-svgo",
   ],
   fonts: {
     families: [{ name: "Fredoka", provider: "google" }],
-  },
-  gtag: {
-    id: "G-VH3Y7P4PLH",
   },
   pwa: {
     strategies: "generateSW",
