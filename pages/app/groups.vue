@@ -22,15 +22,6 @@
       >
     </div>
     <SpinLoader v-if="loading" height="flex-grow" />
-    <div v-if="!loading && groupsList?.length === 0">
-      <UAlert
-        icon="i-heroicons-information-circle"
-        title="No groups"
-        description="You are not part of any groups."
-        color="primary"
-        variant="outline"
-      />
-    </div>
     <UAlert
       v-if="!loading && !useName().value"
       color="red"
@@ -49,7 +40,15 @@
         },
       ]"
     />
-
+    <div v-if="!loading && groupsList?.length === 0">
+      <UAlert
+        icon="i-heroicons-information-circle"
+        title="No groups"
+        description="You are not part of any groups."
+        color="primary"
+        variant="outline"
+      />
+    </div>
     <div class="space-y-2" v-if="!loading && groupsList.length > 0">
       <GroupItem v-for="group in groupsList" :key="group.id" :group="group" />
     </div>
