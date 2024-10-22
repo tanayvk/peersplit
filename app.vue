@@ -2,8 +2,8 @@
 import "~/assets/main.css";
 useSeoMeta({
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-  title: "PeerSplit | Split your expenses",
-  description: "Split your expenses",
+  title: "PeerSplit | Track and split group expenses. 100% free, 100% private.",
+  description: "Track and split group expenses. 100% free, 100% private.",
 });
 </script>
 <template>

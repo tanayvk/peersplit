@@ -30,7 +30,7 @@ export default defineNuxtConfig({
     registerWebManifestInRouteRules: true,
     registerType: "autoUpdate",
     manifest: {
-      name: "PeerSplit | Split your expenses",
+      name: "PeerSplit | Track and split group expenses. 100% free, 100% private.",
       short_name: "PeerSplit",
       theme_color: "#89a1f0",
       icons: [

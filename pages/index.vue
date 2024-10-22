@@ -8,7 +8,9 @@
             <span class="text-primary">Peer</span
             ><span class="text-lime-300">Split</span>
           </h1>
-          <h3 class="text-2xl">Split your expenses with friends!</h3>
+          <h3 class="text-2xl">
+            Track and split group expenses. 100% free, 100% private.
+          </h3>
         </div>
         <div class="flex flex-row items-center justify-center gap-2">
           <UButton to="/app" size="xl">Get Started</UButton>
