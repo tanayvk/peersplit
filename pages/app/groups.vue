@@ -31,6 +31,25 @@
         variant="outline"
       />
     </div>
+    <UAlert
+      v-if="!loading && !useName().value"
+      color="red"
+      icon="i-heroicons-exclamation-triangle"
+      variant="subtle"
+      title="Name Needed!"
+      description="It looks like you haven't set a name yet. Please update your name in settings."
+      :actions="[
+        {
+          click() {
+            navigateTo('/app/settings');
+          },
+          variant: 'solid',
+          color: 'red',
+          label: 'Go to Settings',
+        },
+      ]"
+    />
+
     <div class="space-y-2" v-if="!loading && groupsList.length > 0">
       <GroupItem v-for="group in groupsList" :key="group.id" :group="group" />
     </div>

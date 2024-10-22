@@ -15,6 +15,7 @@
             v-if="!noValues"
             @input="fixValue(member)"
             v-model="model[member]"
+            placeholder="ex: 150.45"
             size="xs"
           />
           <UButton

@@ -19,7 +19,7 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxt/fonts",
     "@pinia/nuxt",
-    "@vite-pwa/nuxt",
+    // "@vite-pwa/nuxt",
     "nuxt-svgo",
   ],
   fonts: {

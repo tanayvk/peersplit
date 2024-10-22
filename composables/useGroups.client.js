@@ -257,6 +257,7 @@ export const useGroups = defineStore("groups", {
     async updateMember(groupID, member) {
       const group = this.groups[groupID];
       group.members[member.id] = member;
+      member.name ||= "Unnamed User";
       const groupDB = await getGroupDB(groupID);
       await groupDB.exec(
         `UPDATE members SET name = ?, site_id = ? WHERE id = ?`,
@@ -342,11 +343,13 @@ export const useGroups = defineStore("groups", {
     getMemberName(state) {
       return (groupID, memberID, lowercase) => {
         const group = state.groups[groupID];
-        return memberID === group.myID
-          ? lowercase
-            ? "you"
-            : "You"
-          : group.members[memberID]?.name;
+        const name =
+          memberID === group.myID
+            ? lowercase
+              ? "you"
+              : "You"
+            : group.members[memberID]?.name;
+        return name || "Unnamed User";
       };
     },
     getGroupCurrency(state) {

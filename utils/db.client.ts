@@ -333,7 +333,7 @@ export const getGroup = async (id: string) => {
     members[member.id] = {
       id: member.id,
       siteID: member.site_id,
-      name: member.name,
+      name: member.name || "Unnamed User",
     };
   });
   const group = {
