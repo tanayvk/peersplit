@@ -31,7 +31,7 @@
           {
             label: 'Visit Launch',
             target: '_blank',
-            to: 'https://www.producthunt.com/products/peersplit',
+            to: 'https://www.producthunt.com/posts/peersplit',
             variant: 'solid',
             color: 'emerald',
           },
@@ -298,7 +298,7 @@ const devlog = [
   {
     date: "Oct 22, 2024",
     text: "Product Hunt launch!",
-    link: "https://producthunt.com/products/peersplit",
+    link: "https://producthunt.com/posts/peersplit",
   },
 ].reverse();
 
