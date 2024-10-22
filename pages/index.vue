@@ -26,12 +26,12 @@
         color="primary"
         variant="subtle"
         title="Product Hunt Launch!"
-        description="I'm launching PeerSplit on Product Hunt next Tuesday (Oct 22)! I'd really appreciate your support—click below to check it out."
+        description="PeerSplit just launched on Product Hunt! I’d love your support—click below to leave a comment and share your thoughts. Your feedback means a lot!"
         :actions="[
           {
             label: 'Visit Launch',
             target: '_blank',
-            to: 'https://www.producthunt.com/posts/peersplit',
+            to: 'https://www.producthunt.com/products/peersplit',
             variant: 'solid',
             color: 'emerald',
           },
@@ -294,6 +294,11 @@ const devlog = [
     date: "Oct 17, 2024",
     text: "Added Splitwise import and CSV export functionality.",
     link: "https://x.com/tanayvk/status/1846787787812753444",
+  },
+  {
+    date: "Oct 22, 2024",
+    text: "Product Hunt launch!",
+    link: "https://producthunt.com/products/peersplit",
   },
 ].reverse();
 
