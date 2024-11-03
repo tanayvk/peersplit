@@ -19,11 +19,16 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxt/fonts",
     "@pinia/nuxt",
-    // "@vite-pwa/nuxt",
+    "@vite-pwa/nuxt",
     "nuxt-svgo",
   ],
   fonts: {
     families: [{ name: "Fredoka", provider: "google" }],
+  },
+  nitro: {
+    routeRules: {
+      "/*": { prerender: true },
+    },
   },
   pwa: {
     strategies: "generateSW",
