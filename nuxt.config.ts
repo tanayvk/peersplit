@@ -27,6 +27,7 @@ export default defineNuxtConfig({
   },
   nitro: {
     routeRules: {
+      "/": { prerender: true },
       "/*": { prerender: true },
     },
   },
@@ -34,6 +35,7 @@ export default defineNuxtConfig({
     strategies: "generateSW",
     registerWebManifestInRouteRules: true,
     registerType: "autoUpdate",
+    includeAssets: ["index.html", "robots.txt"],
     manifest: {
       name: "PeerSplit | Track and split group expenses. 100% free, 100% private.",
       short_name: "PeerSplit",
