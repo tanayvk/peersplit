@@ -29,6 +29,7 @@ export default defineNuxtConfig({
     routeRules: {
       "/": { prerender: true },
       "/*": { prerender: true },
+      "/app/": { redirect: "/app/groups" },
     },
   },
   pwa: {
@@ -40,6 +41,7 @@ export default defineNuxtConfig({
       name: "PeerSplit | Track and split group expenses. 100% free, 100% private.",
       short_name: "PeerSplit",
       theme_color: "#89a1f0",
+      start_url: "/app",
       icons: [
         {
           src: "pwa-64x64.png",
